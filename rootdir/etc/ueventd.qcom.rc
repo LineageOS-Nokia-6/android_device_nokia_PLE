@@ -1,0 +1,4 @@
+/dev/block/platform/soc/7824900.sdhci/by-name/config    0600   system     system
+/dev/input/event*                                       0660   root       input
+/dev/graphics/fb0                                       0660   root       graphics
+/dev/kgsl-3d0                                           0660   system     graphics

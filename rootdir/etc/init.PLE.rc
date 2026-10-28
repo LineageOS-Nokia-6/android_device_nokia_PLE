@@ -1,0 +1,10 @@
+# Minimal PLE early-boot hooks. Subsystem services are added only after their
+# exact 619F dependencies and runtime contracts are proven.
+
+on early-init
+    write /sys/fs/selinux/checkreqprot 0
+
+on fs
+    mkdir /mnt/vendor/persist 0771 system system
+    mkdir /vendor/firmware_mnt 0771 system system
+    mkdir /vendor/dsp 0771 system system
