@@ -1,0 +1,8 @@
+# Extension of the platform ARM32 media-codec seccomp filter, not a replacement.
+# Exact PLE619F policy permits eventfd2. The stock OMX AVC decoder/encoder use
+# eventfd(0,0), which bionic maps to eventfd2 (SYSCALLS.TXT). Without this entry
+# component capability discovery aborts inside __eventfd and caches software.
+eventfd2: 1
+# The exact stock OMX message thread uses select(), mapped to __pselect6.
+# Its capability-discovery SIGSYS stack is preserved in hardware-attempt-2.
+pselect6: 1

@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+# Exact PLE619F daemon identity; modern vendor data path only. Do not create,
+# replace or program calibration/OTP/persist contents.
+on post-fs-data
+    mkdir /data/vendor/camera 0770 camera camera
+
+service qcamerasvr /vendor/bin/mm-qcamera-daemon
+    class late_start
+    user camera
+    group camera system inet input graphics
+    task_profiles CameraServiceCapacity
+
+# Keep the existing OMX service identity and priority, changing only its
+# capacity group to match the measured PLE camera/encoder pipeline.
+service vendor.media.omx /vendor/bin/hw/android.hardware.media.omx@1.0-service
+    override
+    class main
+    user mediacodec
+    group camera drmrpc mediadrm audio
+    ioprio rt 4
+    task_profiles CameraServiceCapacity
+
+# The generic provider is in class hal, which init starts before late_start.
+# Override that definition after its alphabetically earlier module rc and wait
+# until boot completion, when the legacy stock daemon is already ready. A live
+# provider-only restart after daemon readiness produced complete metadata for
+# both sensors; the early start produced zero-sized stream configurations.
+service vendor.camera.provider /vendor/bin/hw/android.hardware.camera.provider-service_32.lineage
+    override
+    disabled
+    interface aidl android.hardware.camera.provider.ICameraProvider/internal/0
+    class hal
+    user cameraserver
+    group audio camera input drmrpc usb
+    ioprio rt 4
+    capabilities SYS_NICE
+    task_profiles CameraServiceCapacity MaxPerformance
+
+on property:sys.boot_completed=1
+    # PLE's faster A53 cluster is CPU0-3. The active app and camera services
+    # use it without taskset polling, clock changes or global scheduler boost.
+    write /dev/cpuset/camera-daemon/cpus 0-3
+    write /dev/cpuset/top-app/cpus 0-3
+    start vendor.camera.provider

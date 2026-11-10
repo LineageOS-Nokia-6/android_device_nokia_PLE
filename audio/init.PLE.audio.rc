@@ -1,0 +1,10 @@
+# Copyright (C) 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+# Kernel-card checkpoint: exact installed619F ADSP firmware is loaded into
+# RAM through PIL. No firmware partition or speaker amplifier is programmed.
+# Same maintained MSM8937 start trigger; keep modem/CDSP/other cores disabled.
+on init
+    setprop vendor.amp.init false
+
+on early-boot
+    write /sys/kernel/boot_adsp/boot 1

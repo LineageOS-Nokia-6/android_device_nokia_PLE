@@ -1,0 +1,61 @@
+// Copyright (C) 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+// Current 4.19 media source with the PLE619F-compatible split-usage display ABI.
+// Distinct module names avoid exporting two conflicting QCOM namespaces to Make.
+cc_defaults {
+    name: "ple_omx_defaults",
+    vendor: true,
+    compile_multilib: "32",
+    cflags: ["-Werror", "-D_ANDROID_", "-D_ANDROID_ICS_"],
+    include_dirs: [
+        "hardware/qcom-caf/sdm660/media/mm-core/inc",
+        "hardware/qcom-caf/sdm660/media/mm-core/src/common",
+        "hardware/qcom-caf/sdm660/media/mm-video-v4l2/vidc/common/inc",
+        "hardware/qcom-caf/sdm660/media/mm-video-v4l2/vidc/venc/inc",
+        "hardware/qcom-caf/sdm660/media/mm-video-v4l2/vidc/vdec/inc",
+        "hardware/qcom-caf/sdm660/media/libc2dcolorconvert",
+        "hardware/qcom-caf/sdm660/media/libstagefrighthw",
+        "system/memory/libion/include",
+        "system/memory/libion/kernel-headers",
+    ],
+    header_libs: ["//hardware/qcom-caf/msm8998:display_headers", "//hardware/qcom-caf/common:qti_kernel_headers", "media_plugin_headers", "libutils_headers"],
+}
+cc_library_shared {
+    name: "libpleOmxCore",
+    stem: "libOmxCore",
+    defaults: ["ple_omx_defaults"],
+    srcs: ["//hardware/qcom-caf/sdm660:ple_omx_core_sources", "registry.c"],
+    cflags: ["-fno-inline", "-fno-short-enums"],
+    shared_libs: ["libcutils"],
+}
+cc_library_static {
+    name: "libpleOmxVidcCommon",
+    defaults: ["ple_omx_defaults"],
+    srcs: ["//hardware/qcom-caf/sdm660:ple_omx_common_sources"],
+}
+cc_library_shared {
+    name: "libplec2dcolorconvert",
+    stem: "libc2dcolorconvert",
+    defaults: ["ple_omx_defaults"],
+    srcs: ["//hardware/qcom-caf/sdm660:ple_c2d_sources"],
+    shared_libs: ["libdl", "liblog"],
+}
+cc_library_shared {
+    name: "libpleOmxVenc",
+    stem: "libOmxVenc",
+    defaults: ["ple_omx_defaults"],
+    srcs: ["//hardware/qcom-caf/sdm660:ple_omx_venc_sources"],
+    cflags: ["-D_MSM8974_", "-DMAX_RES_1080P", "-DMAX_RES_1080P_EBI", "-DMAX_H264_LEVEL_4", "-D_DISABLE_TEMPORAL_LAYER_", "-DSUPPORT_CONFIG_INTRA_REFRESH", "-DUSE_CAMERA_METABUFFER_UTILS", "-DUSE_ION", "-DUSE_NATIVE_HANDLE_SOURCE"],
+    shared_libs: ["libplec2dcolorconvert", "libcutils", "libion", "liblog", "//hardware/qcom-caf/msm8998:libqdMetaData"],
+    static_libs: ["libpleOmxVidcCommon"],
+}
+cc_library_shared {
+    name: "libpleOmxVdec",
+    stem: "libOmxVdec",
+    defaults: ["ple_omx_defaults"],
+    srcs: ["//hardware/qcom-caf/sdm660:ple_omx_vdec_sources"],
+    cflags: ["-Wno-parentheses", "-D_MSM8974_", "-D_QUERY_DISP_RES_", "-DADAPTIVE_PLAYBACK_SUPPORTED", "-DALLOCATE_OUTPUT_NATIVEHANDLE", "-DFLEXYUV_SUPPORTED", "-DMAX_RES_1080P", "-DMAX_RES_1080P_EBI", "-DPROCESS_EXTRADATA_IN_OUTPUT_PORT", "-DUSE_ION"],
+    header_libs: ["libnativebase_headers"],
+    shared_libs: ["libcutils", "libion", "liblog", "//hardware/qcom-caf/msm8998:libqdMetaData", "//hardware/qcom-caf/msm8998:libqdutils"],
+    static_libs: ["libpleOmxVidcCommon"],
+}
