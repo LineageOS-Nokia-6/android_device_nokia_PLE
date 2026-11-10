@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+service vendor.thermal-ple /vendor/bin/hw/android.hardware.thermal@2.0-service.nokia_ple
+    interface android.hardware.thermal@1.0::IThermal default
+    interface android.hardware.thermal@2.0::IThermal default
+    class hal
+    user root
+    group root

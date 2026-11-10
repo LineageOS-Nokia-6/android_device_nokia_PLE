@@ -1,0 +1,26 @@
+{
+  "Nodes": [
+    {
+      "Name": "CpuMinQos",
+      "Path": "/sys/module/msm_performance/parameters/cpu_min_freq",
+      "Values": ["0:1401000 4:1094400", "0:1094400 4:902400", "0:0 4:0"],
+      "DefaultIndex": 2,
+      "ResetOnInit": true
+    },
+    {
+      "Name": "GpuUiFloor",
+      "Type": "Property",
+      "Path": "vendor.powerhal.gpu_boost",
+      "Values": ["1", "0"],
+      "DefaultIndex": 1,
+      "ResetOnInit": true
+    }
+  ],
+  "Actions": [
+    {"PowerHint": "INTERACTION", "Node": "CpuMinQos", "Value": "0:1094400 4:902400", "Duration": 400},
+    {"PowerHint": "LAUNCH", "Node": "CpuMinQos", "Value": "0:1401000 4:1094400", "Duration": 2000},
+    {"PowerHint": "INTERACTION", "Node": "GpuUiFloor", "Value": "1", "Duration": 400},
+    {"PowerHint": "DISPLAY_UPDATE_IMMINENT", "Node": "GpuUiFloor", "Value": "1", "Duration": 750},
+    {"PowerHint": "LAUNCH", "Node": "GpuUiFloor", "Value": "1", "Duration": 750}
+  ]
+}

@@ -1,0 +1,15 @@
+// PLE-specific Health configuration, maintained current QTI/AOSP implementation.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+cc_binary {
+    name: "android.hardware.health-service.ple",
+    vendor: true,
+    relative_install_path: "hw",
+    defaults: ["libhealth_aidl_impl_user"],
+    static_libs: ["libhealth_aidl_impl"],
+    include_dirs: ["system/core/healthd", "system/core/healthd/include", "system/core/healthd/include_charger"],
+    srcs: ["main.cpp"],
+    init_rc: ["android.hardware.health-service.ple.rc"],
+    vintf_fragments: ["android.hardware.health-service.ple.xml"],
+    overrides: ["charger", "android.hardware.health-service.qti"],
+    cflags: ["-Wall", "-Werror"],
+}
