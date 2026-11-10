@@ -1,0 +1,15 @@
+// Copyright (C) 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+cc_binary {
+    name: "android.hardware.bluetooth@1.0-service.ple",
+    vendor: true,
+    relative_install_path: "hw",
+    compile_multilib: "64",
+    srcs: ["service.cpp"],
+    include_dirs: ["hardware/interfaces/bluetooth/1.0/default"],
+    static_libs: ["android.hardware.bluetooth-hci"],
+    shared_libs: ["android.hardware.bluetooth@1.0", "libhidlbase", "liblog", "libutils"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+    init_rc: ["android.hardware.bluetooth@1.0-service.ple.rc"],
+    vintf_fragments: ["android.hardware.bluetooth@1.0-service.ple.xml"],
+}

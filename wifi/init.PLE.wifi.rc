@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# Only volatile/data-side Wi-Fi state is writable. Factory persist stays ro.
+on init
+    # Built-in Prima intentionally delays initialization until the Wi-Fi HAL
+    # writes fwpath. Match the maintained Mi8937 DAC contract (owner0644).
+    chown wifi wifi /sys/module/wlan/parameters/fwpath
+
+on post-fs-data
+    mkdir /data/vendor/wifi 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa/sockets 0770 wifi wifi
+    mkdir /data/vendor/wifi/hostapd 0770 wifi wifi
+    mkdir /data/vendor/wifi/hostapd/sockets 0770 wifi wifi
+    restorecon_recursive /data/vendor/wifi
+    start wcnss-service
+
+on boot
+    setprop wifi.interface wlan0
+
+service wcnss-service /vendor/bin/wcnss_service
+    class main
+    user system
+    group system wifi
+    disabled
+    oneshot

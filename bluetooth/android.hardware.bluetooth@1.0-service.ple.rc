@@ -1,0 +1,6 @@
+service vendor.bluetooth-1-0 /vendor/bin/hw/android.hardware.bluetooth@1.0-service.ple
+    interface android.hardware.bluetooth@1.0::IBluetoothHci default
+    class hal
+    user bluetooth
+    group bluetooth
+    task_profiles ServiceCapacityLow

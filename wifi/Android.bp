@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: Apache-2.0
+prebuilt_etc {
+    name: "init.PLE.wifi.rc",
+    src: "init.PLE.wifi.rc",
+    sub_dir: "init",
+    vendor: true,
+}
+
+install_symlink {
+    name: "ple-wifi-ini-link",
+    vendor: true,
+    installed_location: "firmware/wlan/prima/WCNSS_qcom_cfg.ini",
+    symlink_target: "/vendor/etc/wifi/WCNSS_qcom_cfg.ini",
+}
+
+install_symlink {
+    name: "ple-wifi-nv-link",
+    vendor: true,
+    installed_location: "firmware/wlan/prima/WCNSS_qcom_wlan_nv.bin",
+    symlink_target: "/mnt/vendor/persist/WCNSS_qcom_wlan_nv.bin",
+}
+
+install_symlink {
+    name: "ple-wifi-dictionary-link",
+    vendor: true,
+    installed_location: "firmware/wlan/prima/WCNSS_wlan_dictionary.dat",
+    symlink_target: "/mnt/vendor/persist/WCNSS_wlan_dictionary.dat",
+}

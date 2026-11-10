@@ -1,0 +1,17 @@
+# Exact PLE619F QRTR service. Its stock vendor_qrtr account is2906:2906;
+# numeric IDs preserve that identity without adding a fourth device tree.
+# This only discovers existing DSP services; it does not restart firmware.
+on post-fs-data
+    mkdir /data/vendor/sensors 0700 system system
+    restorecon /data/vendor/sensors
+
+service vendor.sensors.qti /vendor/bin/sensors.qcom
+    class core
+    user system
+    group system
+
+service vendor.qrtr-ns /vendor/bin/qrtr-ns -f
+    class core
+    user 2906
+    group 2906
+    capabilities NET_BIND_SERVICE
