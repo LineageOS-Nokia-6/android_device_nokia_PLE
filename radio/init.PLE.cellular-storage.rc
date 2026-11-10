@@ -1,0 +1,7 @@
+# Exact PLE619F service contract; no NV restore, erasure or copy action.
+# The kernel must expose its original remote-filesystem UIO mapping.
+service vendor.rmt_storage /vendor/bin/rmt_storage
+    class core
+    user root
+    shutdown critical
+    ioprio rt 0

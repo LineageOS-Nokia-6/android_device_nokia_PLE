@@ -1,0 +1,31 @@
+PhhImsPLE
+
+Source: https://github.com/LineageOS-Nexus-6P/android_packages_apps_PhhIms
+Revision: 6fa36f59e33e2d5df6703d977075888a5f6430af (lineage-22.2)
+License: GNU General Public License version 2; see LICENSE.
+
+Derived from https://github.com/phhusson/ims with legacy-device work from
+https://github.com/Ultra-Legacy-Hippeastrum/ims.
+
+Developers and contributors credited by the upstream project:
+
+Pierre-Hugues Husson (https://github.com/phhusson): original creator and core
+IMS/SIP implementation.
+Dominique Martinet (https://github.com/martinetd): SIP protocol, parsing,
+transport, registration and IMS SMS development.
+Mathias Gluszczynski (https://github.com/krazey): carrier policies,
+registration recovery, signaling/media robustness and Android integration.
+Aleksei Mikhasenko (https://github.com/amikhasenko): call handling, audio,
+microphone fixes, reconnection behavior and platform integration.
+Yaroslav Zviezda (https://github.com/acroreiser): legacy-device compatibility,
+P-CSCF, registration/uplink fixes and Nexus reference work.
+borbelyvince (https://github.com/borbelyvince): PLMN, subscription and SIP fixes.
+derveror (https://github.com/derveror): Nexus 6P Android 15 integration,
+Angler adaptation, device testing and maintenance.
+
+Acknowledgements: every contributor and tester of the original PhhIms project,
+Ultra Legacy Hippeastrum ports and wider legacy-device community.
+
+The Nokia integration uses Soong, system_ext, platform APIs and the platform
+certificate. It does not bundle an SDK, signing key, native AEC binary or
+Gradle cache. Source copyright and license notices remain in their files.

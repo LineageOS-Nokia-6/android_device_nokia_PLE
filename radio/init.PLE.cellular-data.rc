@@ -1,0 +1,21 @@
+# Exact619F netmgr/BAM transport. Do not fake readiness or a successful data call.
+on post-fs-data
+    mkdir /dev/socket/netmgr 0750 radio radio
+    restorecon /dev/socket/netmgr
+    mkdir /data/vendor/netmgr 0770 radio radio
+    chmod 0770 /data/vendor/netmgr
+    restorecon /data/vendor/netmgr
+
+# Normal main-class startup precedes the long stock MCFG producer/RIL_Init.
+# Keep root/default groups as exact619F; daemon retains its own privilege logic.
+service vendor.netmgrd /vendor/bin/netmgrd
+    class main
+
+on property:ro.vendor.use_data_netmgrd=false
+    stop vendor.netmgrd
+
+on property:ro.baseband=apq
+    stop vendor.netmgrd
+
+on property:persist.vendor.data.mode=disabled
+    stop vendor.netmgrd

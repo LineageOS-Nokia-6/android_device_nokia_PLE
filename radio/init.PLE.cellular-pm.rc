@@ -1,0 +1,19 @@
+# Exact619F native peripheral manager. Stock pm-service file capability is
+# NET_BIND_SERVICE (0x400); express it explicitly in init, not a root daemon.
+service vendor.per_mgr /vendor/bin/pm-service
+    class core
+    user system
+    group system net_raw
+    capabilities NET_BIND_SERVICE
+
+service vendor.per_proxy /vendor/bin/pm-proxy
+    class core
+    user system
+    group system
+    disabled
+
+on property:init.svc.vendor.per_mgr=running
+    start vendor.per_proxy
+
+on property:sys.shutdown.requested=*
+    stop vendor.per_proxy

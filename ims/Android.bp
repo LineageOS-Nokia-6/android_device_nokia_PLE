@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: GPL-2.0
+// Pinned attributed source: see NOTICE. No checked-in SDK jar is consumed.
+package {
+    default_applicable_licenses: ["device_nokia_PLE_ims_license"],
+}
+
+license {
+    name: "device_nokia_PLE_ims_license",
+    visibility: [":__subpackages__"],
+    license_kinds: ["SPDX-license-identifier-GPL-2.0"],
+    license_text: ["LICENSE"],
+}
+
+android_app {
+    name: "PhhImsPLE",
+    srcs: [
+        "app/src/main/java/**/*.kt",
+        "app/src/main/java/**/*.java",
+    ],
+    resource_dirs: ["app/src/main/res"],
+    manifest: "app/src/main/AndroidManifest.xml",
+    certificate: "platform",
+    privileged: true,
+    platform_apis: true,
+    system_ext_specific: true,
+    min_sdk_version: "35",
+    target_sdk_version: "36",
+    static_libs: [
+        "kotlin-stdlib",
+        "kotlinx_coroutines",
+        "kotlinx_coroutines_android",
+    ],
+    dex_preopt: {
+        enabled: false,
+    },
+}
