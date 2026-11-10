@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.lineageos.ple.launcher.navigation">
+    <overlay android:targetPackage="com.android.launcher3" android:isStatic="true" android:priority="900" />
+    <application android:hasCode="false" />
+</manifest>

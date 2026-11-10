@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- Physical keys navigate; the blank bar only supplies system insets. -->
+    <integer name="config_navBarInteractionMode">0</integer>
+    <bool name="config_imeDrawsImeNavBar">false</bool>
+    <bool name="config_navBarCanMove">false</bool>
+    <dimen name="navigation_bar_height">24dp</dimen>
+    <dimen name="navigation_bar_height_landscape">24dp</dimen>
+    <dimen name="navigation_bar_frame_height">24dp</dimen>
+</resources>

@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.lineageos.ple.hardware.keys">
+    <overlay android:targetPackage="lineageos.platform" android:isStatic="true" android:priority="900" />
+    <application android:hasCode="false" />
+</manifest>

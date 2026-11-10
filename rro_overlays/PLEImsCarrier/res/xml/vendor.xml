@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<carrier_config_list>
+    <!-- Exact PLE619F CarrierConfig res/xml/vendor.xml line1681 and maintained
+         mithorium d3292cac overlay-radio agree. Capability only: leave actual
+         SIM/network authorization, provisioning, APNs, WFC and VT untouched. -->
+    <carrier_config mcc="310" mnc="410">
+        <boolean name="carrier_volte_available_bool" value="true" />
+    </carrier_config>
+</carrier_config_list>

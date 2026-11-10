@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- LatinIME supports MODEL/BRAND, not DEVICE. This affects only the
+         Default choice; a user's explicit duration remains adjustable. -->
+    <string-array name="keypress_vibration_durations" translatable="false">
+        <item>MODEL=Nokia 6:BRAND=Nokia,35</item>
+    </string-array>
+</resources>

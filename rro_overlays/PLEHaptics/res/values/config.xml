@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- User-selected system45ms after the working50ms stock-derived profile.
+         LatinIME has its independent35ms default. No voltage change. -->
+    <integer-array name="config_virtualKeyVibePattern"><item>45</item></integer-array>
+    <integer-array name="config_longPressVibePattern"><item>45</item></integer-array>
+    <!-- Same duration for modern ticks, without stock's clock-only125ms delay. -->
+    <integer-array name="config_clockTickVibePattern"><item>45</item></integer-array>
+    <integer-array name="config_doubleClickVibePattern">
+        <item>0</item><item>45</item><item>100</item><item>45</item>
+    </integer-array>
+</resources>

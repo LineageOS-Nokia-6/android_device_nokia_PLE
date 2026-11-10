@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- Same maintained Mi8937 legacy-HAL compatibility: don't enumerate and
+         delete TEE templates unknown to a newly installed framework. -->
+    <bool name="config_cleanupUnusedFingerprints">false</bool>
+</resources>

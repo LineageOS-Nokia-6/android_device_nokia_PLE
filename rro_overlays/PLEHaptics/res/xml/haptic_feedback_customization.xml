@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<haptic-feedback-constants>
+    <!-- TOGGLE_OFF and GESTURE_THRESHOLD_DEACTIVATE otherwise choose
+         TEXTURE_TICK whose non-fallback TICK is unsupported by the legacy HAL.
+         Real software waveforms, not invented hardware effects/capabilities. -->
+    <constant id="22">
+        <vibration-effect><waveform-effect>
+            <waveform-entry durationMs="45" amplitude="default" />
+        </waveform-effect></vibration-effect>
+    </constant>
+    <constant id="24">
+        <vibration-effect><waveform-effect>
+            <waveform-entry durationMs="45" amplitude="default" />
+        </waveform-effect></vibration-effect>
+    </constant>
+</haptic-feedback-constants>

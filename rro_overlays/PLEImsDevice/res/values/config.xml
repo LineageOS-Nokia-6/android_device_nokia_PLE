@@ -1,0 +1,4 @@
+<resources>
+    <!-- Device capability only; do not override the SIM/carrier's provisioning. -->
+    <bool name="config_device_volte_available">true</bool>
+</resources>

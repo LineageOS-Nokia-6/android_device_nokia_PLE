@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0; exact physical key mask, same as primary Mi8937 reference. -->
+<resources>
+    <!-- Home1 + Back2 + Recents16 + Volume64. -->
+    <integer name="config_deviceHardwareKeys">83</integer>
+</resources>

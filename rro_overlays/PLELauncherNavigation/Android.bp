@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+runtime_resource_overlay {
+    name: "PLELauncherNavigation",
+    product_specific: true,
+    sdk_version: "current",
+    resource_libs: ["Launcher3QuickStep"],
+    // Keep target app references (0x7f) separate from this layout's package.
+    aaptflags: ["--package-id", "0x7e", "--allow-reserved-package-id"],
+}

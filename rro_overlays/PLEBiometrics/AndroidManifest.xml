@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="org.lineageos.ple.biometrics">
+    <overlay android:targetPackage="android" android:isStatic="true" android:priority="900" />
+    <application android:hasCode="false" />
+</manifest>

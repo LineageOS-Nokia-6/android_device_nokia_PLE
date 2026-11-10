@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<config>
+    <!-- Preserve every static product RRO that existed before this file. -->
+    <overlay package="org.lineageos.aperture.frameworksbaseoverlay" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.glimpse.frameworksbaseoverlay" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.overlay.font.googlesansflex" mutable="false" enabled="true" />
+    <overlay package="com.android.launcher3.overlay" mutable="false" enabled="true" />
+    <overlay package="com.android.networkstack.overlay" mutable="false" enabled="true" />
+    <overlay package="com.android.permissioncontroller.overlay" mutable="false" enabled="true" />
+    <overlay package="com.android.documentsui.overlay" mutable="false" enabled="true" />
+
+    <!-- Existing /data selected gestures.  Make both software modes unable to
+         override the Nokia physical-key mode on an update installation. -->
+    <overlay package="com.android.internal.systemui.navbar.gestural" mutable="false" enabled="false" />
+    <overlay package="com.android.internal.systemui.navbar.threebutton" mutable="false" enabled="false" />
+
+    <!-- The bar remains a blank 24dp inset; only physical keys navigate. -->
+    <overlay package="org.lineageos.ple.framework.navigation" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.systemui.navigation" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.launcher.navigation" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.hardware.keys" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.navigation.hardware" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.haptics" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.keyboard.haptics" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.sensors.display" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.biometrics" mutable="false" enabled="true" />
+    <overlay package="org.lineageos.ple.biometrics.lineage" mutable="false" enabled="true" />
+</config>

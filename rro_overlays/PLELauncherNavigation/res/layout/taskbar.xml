@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2021 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+     PLE: preserve Launcher3's actual taskbar structure and inset, with the
+     navigation container GONE and excluded from accessibility. Physical
+     Goodix keys provide navigation; the hidden parent is never made visible
+     by NavbarButtonsViewController. All IDs refer to the real target app.
+-->
+<com.android.launcher3.taskbar.TaskbarDragLayer
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@*com.android.launcher3:id/taskbar_container"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false">
+
+    <com.android.launcher3.taskbar.TaskbarView
+        android:id="@*com.android.launcher3:id/taskbar_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:forceHasOverlappingRendering="false"
+        android:layout_gravity="bottom"
+        android:clipChildren="false" />
+
+    <com.android.launcher3.taskbar.TaskbarScrimView
+        android:id="@*com.android.launcher3:id/taskbar_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <FrameLayout
+        android:id="@*com.android.launcher3:id/taskbar_bubbles_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipChildren="false">
+        <com.android.launcher3.taskbar.bubbles.BubbleBarView
+            android:id="@*com.android.launcher3:id/taskbar_bubbles"
+            android:layout_width="wrap_content"
+            android:layout_height="@*com.android.launcher3:dimen/bubblebar_size_with_pointer"
+            android:layout_marginHorizontal="@*com.android.launcher3:dimen/transient_taskbar_bottom_margin"
+            android:paddingTop="@*com.android.launcher3:dimen/bubblebar_pointer_visible_size"
+            android:visibility="gone"
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:clipChildren="false"
+            android:elevation="@*com.android.launcher3:dimen/bubblebar_elevation" />
+    </FrameLayout>
+
+    <com.android.launcher3.taskbar.navbutton.NearestTouchFrame
+        android:id="@*com.android.launcher3:id/navbuttons_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:visibility="gone"
+        android:importantForAccessibility="noHideDescendants">
+        <FrameLayout
+            android:id="@*com.android.launcher3:id/start_contextual_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_gravity="start" />
+        <LinearLayout
+            android:id="@*com.android.launcher3:id/end_nav_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_gravity="end" />
+        <FrameLayout
+            android:id="@*com.android.launcher3:id/end_contextual_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_gravity="end" />
+    </com.android.launcher3.taskbar.navbutton.NearestTouchFrame>
+
+    <com.android.launcher3.taskbar.NudgeView
+        android:id="@*com.android.launcher3:id/nudge_icon"
+        android:layout_width="@*com.android.launcher3:dimen/taskbar_nudge_pill_width"
+        android:layout_height="@*com.android.launcher3:dimen/taskbar_nudge_pill_height"
+        android:background="@*com.android.launcher3:drawable/bg_nudge_view"
+        android:clickable="false"
+        android:clipToOutline="false"
+        android:src="@*com.android.launcher3:drawable/ic_translate"
+        android:visibility="gone"
+        android:layout_gravity="bottom|center_horizontal" />
+
+    <com.android.launcher3.taskbar.StashedHandleView
+        android:id="@*com.android.launcher3:id/stashed_handle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@*com.android.launcher3:color/taskbar_stashed_handle_dark_color"
+        android:clipToOutline="true"
+        android:layout_gravity="bottom" />
+</com.android.launcher3.taskbar.TaskbarDragLayer>

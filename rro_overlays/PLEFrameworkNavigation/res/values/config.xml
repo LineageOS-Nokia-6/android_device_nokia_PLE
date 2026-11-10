@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- A real bottom system inset, not a fake cutout or reduced display. -->
+    <bool name="config_showNavigationBar">true</bool>
+    <bool name="config_navBarCanMove">false</bool>
+    <!-- No software controls need contrast protection in the blank inset. -->
+    <bool name="config_navBarNeedsScrim">false</bool>
+    <dimen name="navigation_bar_height">24dp</dimen>
+    <dimen name="navigation_bar_height_landscape">24dp</dimen>
+    <dimen name="navigation_bar_width">24dp</dimen>
+    <dimen name="navigation_bar_frame_height">24dp</dimen>
+</resources>

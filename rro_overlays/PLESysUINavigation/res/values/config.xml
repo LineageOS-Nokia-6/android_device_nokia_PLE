@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<resources>
+    <!-- Inflate only inert Space views in all navigation-mode variants. -->
+    <string name="config_navBarLayout" translatable="false">space;space;space</string>
+    <string name="config_navBarLayoutQuickstep" translatable="false">space;space;space</string>
+    <string name="config_navBarLayoutHandle" translatable="false">space;space;space</string>
+</resources>
