@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0
+# Exact619F libmmcamera2_stats_modules uses ISensorManager/getService from
+# mm-qcamerad, not only from hal_camera_default. The service is actually
+# registered by system_server; existing binder/node rules are sufficient,
+# but the effective baseline binary lacks this one find permission.
+# Same bounded client rule as official mithorium-common ee31e7ba27bba652b0ab9bdcdefa271ba02cd71c.
+allow mm-qcamerad fwk_sensor_hwservice:hwservice_manager find;

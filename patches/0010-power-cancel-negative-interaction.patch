@@ -1,0 +1,17 @@
+diff --git a/power-libperfmgr/aidl/Power.cpp b/power-libperfmgr/aidl/Power.cpp
+index 32a317c..a1e78ea 100644
+--- a/power-libperfmgr/aidl/Power.cpp
++++ b/power-libperfmgr/aidl/Power.cpp
+@@ -155,6 +155,12 @@ ndk::ScopedAStatus Power::setBoost(Boost type, int32_t durationMs) {
+     ATRACE_NAME(("B:" + toString(type) + ":" + std::to_string(durationMs)).c_str());
+     switch (type) {
+         case Boost::INTERACTION:
++            // AIDL negative duration explicitly cancels an active boost.
++            // Acquire clamps durations and must not receive cancellation.
++            if (durationMs < 0) {
++                HintManager::GetInstance()->EndHint("INTERACTION");
++                break;
++            }
+             if (mSustainedPerfModeOn) {
+                 break;
+             }

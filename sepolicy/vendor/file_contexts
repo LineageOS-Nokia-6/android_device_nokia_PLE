@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+/vendor/bin/hw/rild\.ple  u:object_r:rild_exec:s0
+/vendor/bin/init\.PLE\.radio-mcfg\.sh u:object_r:qti_init_shell_exec:s0
+/data/vendor/fih_mcfg(/.*)? u:object_r:vendor_mbn_data_file:s0
+/data/vendor/fih_atl(/.*)? u:object_r:vendor_mbn_data_file:s0
+/vendor/bin/gx_fpd        u:object_r:ple_goodix_exec:s0
+/vendor/bin/hw/android\.hardware\.biometrics\.fingerprint@2\.1-service\.ple u:object_r:hal_fingerprint_default_exec:s0
+/dev/goodix_fp           u:object_r:ple_goodix_device:s0
+/data/system/fingerprint(/.*)? u:object_r:fingerprintd_data_file:s0
+/dev/i2c-6               u:object_r:ple_audio_i2c_device:s0
+/vendor/bin/hw/android\.hardware\.thermal@2\.0-service\.nokia_ple u:object_r:hal_thermal_default_exec:s0
+/vendor/bin/hw/android\.hardware\.bluetooth@1\.0-service\.ple u:object_r:hal_bluetooth_default_exec:s0
+/vendor/bin/hw/android\.hardware\.power\.stats-service\.ple u:object_r:hal_power_stats_default_exec:s0
+/vendor/bin/hw/android\.hardware\.health-service\.ple u:object_r:hal_health_default_exec:s0

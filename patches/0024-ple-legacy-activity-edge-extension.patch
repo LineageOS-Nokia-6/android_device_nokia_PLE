@@ -1,0 +1,230 @@
+--- a/frameworks/base/libs/WindowManager/Shell/src/com/android/wm/shell/transition/DefaultTransitionHandler.java
++++ b/frameworks/base/libs/WindowManager/Shell/src/com/android/wm/shell/transition/DefaultTransitionHandler.java
+@@ -121,7 +121,9 @@
+ import com.android.wm.shell.sysui.ShellInit;
+ 
+ import java.util.ArrayList;
++import java.util.List;
+ import java.util.NoSuchElementException;
++import java.util.function.Consumer;
+ 
+ /** The default handler that handles anything not already handled. */
+ public class DefaultTransitionHandler implements Transitions.TransitionHandler {
+@@ -379,6 +381,7 @@
+             finishCallback.onTransitionFinished(null /* wct */);
+         };
+ 
++        final List<Consumer<SurfaceControl.Transaction>> legacyEdgeCallbacks = new ArrayList<>();
+         @ColorInt int backgroundColorForTransition = 0;
+         final int wallpaperTransit = getWallpaperTransitType(info);
+         int animatingDisplayId = Integer.MIN_VALUE;
+@@ -605,9 +608,12 @@
+                 if (!isTask && a.getExtensionEdges() != 0x0
+                         && (change.hasFlags(FLAG_FILLS_TASK
+                         | FLAG_IN_TASK_WITH_EMBEDDED_ACTIVITY))) {
+-                    startTransaction.setEdgeExtensionEffect(
+-                            change.getLeash(), a.getExtensionEdges());
+-                    finishTransaction.setEdgeExtensionEffect(change.getLeash(), /* edge */ 0);
++                    if (!TransitionAnimationHelper.maybeExtendWindowLegacy(change, a, mode,
++                            startTransaction, finishTransaction, legacyEdgeCallbacks)) {
++                        startTransaction.setEdgeExtensionEffect(
++                                change.getLeash(), a.getExtensionEdges());
++                        finishTransaction.setEdgeExtensionEffect(change.getLeash(), /* edge */ 0);
++                    }
+                 }
+ 
+                 if (isActivity && !isActivityLevel
+@@ -652,6 +658,8 @@
+                     finishTransaction);
+         }
+ 
++        TransitionAnimationHelper.applyLegacyPostStartCallbacks(startTransaction,
++                legacyEdgeCallbacks);
+         startTransaction.apply();
+ 
+         final boolean hasAnimations = !animations.isEmpty();
+
+--- a/frameworks/base/libs/WindowManager/Shell/src/com/android/wm/shell/transition/TransitionAnimationHelper.java
++++ b/frameworks/base/libs/WindowManager/Shell/src/com/android/wm/shell/transition/TransitionAnimationHelper.java
+@@ -27,6 +27,7 @@
+ import static android.window.TransitionInfo.FLAGS_IS_NON_APP_WINDOW;
+ import static android.window.TransitionInfo.FLAG_IS_DISPLAY;
+ import static android.window.TransitionInfo.FLAG_IS_WALLPAPER;
++import static android.window.TransitionInfo.FLAG_STARTING_WINDOW_TRANSFER_RECIPIENT;
+ import static android.window.TransitionInfo.FLAG_TRANSLUCENT;
+ 
+ import static com.android.internal.policy.TransitionAnimation.WALLPAPER_TRANSITION_CLOSE;
+@@ -39,16 +40,26 @@
+ import android.annotation.NonNull;
+ import android.annotation.Nullable;
+ import android.app.WindowConfiguration;
++import android.graphics.Bitmap;
++import android.graphics.BitmapShader;
++import android.graphics.Canvas;
+ import android.graphics.Color;
+ import android.graphics.Insets;
++import android.graphics.Paint;
++import android.graphics.PixelFormat;
+ import android.graphics.Rect;
++import android.graphics.Shader;
+ import android.util.SparseArray;
+ import android.view.InsetsSource;
+ import android.view.InsetsState;
++import android.view.Surface;
+ import android.view.SurfaceControl;
+ import android.view.WindowManager;
+ import android.view.animation.AlphaAnimation;
+ import android.view.animation.Animation;
++import android.view.animation.Transformation;
++import android.window.ScreenCapture;
++import android.window.ScreenCaptureInternal;
+ import android.window.TransitionInfo;
+ 
+ import com.android.internal.R;
+@@ -62,6 +73,146 @@
+ 
+ /** The helper class that provides methods for adding styles to transition animations. */
+ public class TransitionAnimationHelper {
++    // Android15/AOSP edge-surface path, scoped to this proven PLE product.
++    static boolean maybeExtendWindowLegacy(TransitionInfo.Change change, Animation animation,
++            int mode, SurfaceControl.Transaction startTransaction,
++            SurfaceControl.Transaction finishTransaction,
++            java.util.List<java.util.function.Consumer<SurfaceControl.Transaction>> callbacks) {
++        if (!"PLE".equals(android.os.Build.DEVICE) || !"Nokia".equals(android.os.Build.BRAND)) {
++            return false;
++        }
++        if (TransitionUtil.isOpeningType(mode)) {
++            callbacks.add(t -> edgeExtendWindowLegacy(change, animation, t, finishTransaction));
++        } else {
++            edgeExtendWindowLegacy(change, animation, startTransaction, finishTransaction);
++        }
++        return true;
++    }
++
++    static void applyLegacyPostStartCallbacks(SurfaceControl.Transaction startTransaction,
++            java.util.List<java.util.function.Consumer<SurfaceControl.Transaction>> callbacks) {
++        if (!callbacks.isEmpty()) {
++            // Opening content must exist before capture, as in the Android15 path.
++            startTransaction.apply(true /* sync */);
++            for (java.util.function.Consumer<SurfaceControl.Transaction> callback : callbacks) {
++                callback.accept(startTransaction);
++            }
++        }
++    }
++
++    private static void edgeExtendWindowLegacy(TransitionInfo.Change change, Animation animation,
++            SurfaceControl.Transaction startTransaction,
++            SurfaceControl.Transaction finishTransaction) {
++        if ((change.getFlags() & FLAG_STARTING_WINDOW_TRANSFER_RECIPIENT) != 0) {
++            return;
++        }
++        final int height = Math.max(change.getStartAbsBounds().height(),
++                change.getEndAbsBounds().height());
++        final int width = Math.max(change.getStartAbsBounds().width(),
++                change.getEndAbsBounds().width());
++        if (width <= 0 || height <= 0) {
++            return;
++        }
++        final Transformation atStart = new Transformation();
++        final Transformation atEnd = new Transformation();
++        animation.getTransformationAt(0, atStart);
++        animation.getTransformationAt(1, atEnd);
++        final Insets insets = Insets.min(atStart.getInsets(), atEnd.getInsets());
++        if (insets.left < 0) {
++            createExtensionSurfaceLegacy(change.getLeash(), new Rect(0, 0, 1, height),
++                    new Rect(0, 0, -insets.left, height), insets.left, 0,
++                    "PLE Left Edge Extension", startTransaction, finishTransaction);
++        }
++        if (insets.top < 0) {
++            createExtensionSurfaceLegacy(change.getLeash(), new Rect(0, 0, width, 1),
++                    new Rect(0, 0, width, -insets.top), 0, insets.top,
++                    "PLE Top Edge Extension", startTransaction, finishTransaction);
++        }
++        if (insets.right < 0) {
++            createExtensionSurfaceLegacy(change.getLeash(),
++                    new Rect(width - 1, 0, width, height),
++                    new Rect(0, 0, -insets.right, height), width, 0,
++                    "PLE Right Edge Extension", startTransaction, finishTransaction);
++        }
++        if (insets.bottom < 0) {
++            createExtensionSurfaceLegacy(change.getLeash(),
++                    new Rect(0, height - 1, width, height),
++                    new Rect(0, 0, width, -insets.bottom), insets.left, height,
++                    "PLE Bottom Edge Extension", startTransaction, finishTransaction);
++        }
++    }
++
++    private static SurfaceControl createExtensionSurfaceLegacy(SurfaceControl parent,
++            Rect edgeBounds, Rect extensionRect, int x, int y, String name,
++            SurfaceControl.Transaction startTransaction,
++            SurfaceControl.Transaction finishTransaction) {
++        final ScreenCaptureInternal.ScreenshotHardwareBuffer edgeBuffer;
++        final Bitmap bitmap;
++        try {
++            final ScreenCaptureInternal.LayerCaptureArgs captureArgs =
++                    new ScreenCaptureInternal.LayerCaptureArgs.Builder(parent)
++                            .setSourceCrop(edgeBounds)
++                            .setFrameScale(1)
++                            .setPixelFormat(PixelFormat.RGBA_8888)
++                            .setChildrenOnly(true)
++                            .setProtectedContentPolicy(ScreenCapture.ScreenCaptureParams
++                                    .PROTECTED_CONTENT_POLICY_REDACT)
++                            .setSecureContentPolicy(ScreenCapture.ScreenCaptureParams
++                                    .SECURE_CONTENT_POLICY_CAPTURE)
++                            .setPreserveDisplayColors(true)
++                            .build();
++            edgeBuffer = ScreenCaptureInternal.captureLayers(captureArgs);
++            bitmap = edgeBuffer == null ? null : edgeBuffer.asBitmap();
++        } catch (RuntimeException error) {
++            android.util.Log.w("PLETransition", "Edge capture unavailable", error);
++            return null;
++        }
++        if (bitmap == null) {
++            // Unlike the old helper, allocate no layer when capture is unavailable.
++            return null;
++        }
++        final SurfaceControl edgeLayer;
++        try {
++            edgeLayer = new SurfaceControl.Builder()
++                    .setName(name)
++                    .setParent(parent)
++                    .setHidden(true)
++                    .setCallsite("TransitionAnimationHelper#createExtensionSurfaceLegacy")
++                    .setOpaque(true)
++                    .setSecure(edgeBuffer.containsSecureLayers())
++                    .setBufferSize(extensionRect.width(), extensionRect.height())
++                    .build();
++        } catch (RuntimeException error) {
++            android.util.Log.w("PLETransition", "Edge layer unavailable", error);
++            return null;
++        }
++        Surface surface = null;
++        try {
++            final BitmapShader shader = new BitmapShader(bitmap,
++                    Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
++            final Paint paint = new Paint();
++            paint.setShader(shader);
++            surface = new Surface(edgeLayer);
++            final Canvas canvas = surface.lockHardwareCanvas();
++            canvas.drawRect(extensionRect, paint);
++            surface.unlockCanvasAndPost(canvas);
++        } catch (RuntimeException error) {
++            startTransaction.remove(edgeLayer);
++            edgeLayer.release();
++            android.util.Log.w("PLETransition", "Edge rendering unavailable", error);
++            return null;
++        } finally {
++            if (surface != null) {
++                surface.release();
++            }
++        }
++        startTransaction.setLayer(edgeLayer, Integer.MIN_VALUE);
++        startTransaction.setPosition(edgeLayer, x, y);
++        startTransaction.setVisibility(edgeLayer, true);
++        finishTransaction.remove(edgeLayer);
++        return edgeLayer;
++    }
++
+ 
+     /** Loads the animation that is defined through attribute id for the given transition. */
+     @Nullable

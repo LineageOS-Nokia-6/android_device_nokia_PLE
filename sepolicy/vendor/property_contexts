@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+vendor.fplv                u:object_r:vendor_ple_goodix_prop:s0 exact string
+vendor.fpver               u:object_r:vendor_ple_goodix_prop:s0 exact string
+vendor.fpready             u:object_r:vendor_ple_goodix_prop:s0 exact string
+vendor.fp                  u:object_r:vendor_ple_goodix_prop:s0 exact string
+persist.vendor.fpnav       u:object_r:vendor_ple_goodix_prop:s0 exact string
+persist.vendor.esd         u:object_r:vendor_ple_goodix_prop:s0 exact string
+persist.vendor.closekm     u:object_r:vendor_ple_goodix_prop:s0 exact string
+ro.vendor.fpcnt            u:object_r:vendor_ple_goodix_prop:s0 exact string
+ro.vendor.ple              u:object_r:vendor_ple_audio_prop:s0 exact string
+vendor.amp.                u:object_r:vendor_ple_audio_prop:s0 prefix string
+persist.vendor.amp.        u:object_r:vendor_ple_audio_prop:s0 prefix string
+
+# Exact PLE619F camera libraries still read these pre-Treble names every
+# frame. The official mithorium context map uses the same camera_prop area.
+# Keep existing camera-domain permissions; never allow reads of default_prop.
+camera.                    u:object_r:camera_prop:s0 prefix string
+persist.camera.            u:object_r:camera_prop:s0 prefix string
+ro.camera.                 u:object_r:camera_prop:s0 prefix string
+cameradaemon.SaveMemAtBoot  u:object_r:camera_prop:s0 exact string
+cpp.set.clock              u:object_r:camera_prop:s0 exact string
+disable.cpp.power.collapse u:object_r:camera_prop:s0 exact string
+persist.partial.skip       u:object_r:camera_prop:s0 exact string

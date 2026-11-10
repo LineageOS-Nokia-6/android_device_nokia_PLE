@@ -1,0 +1,15 @@
+diff --git a/src/java/com/android/internal/telephony/uicc/UiccPort.java b/src/java/com/android/internal/telephony/uicc/UiccPort.java
+index 3f59582eae..e2738f03ef 100644
+--- a/src/java/com/android/internal/telephony/uicc/UiccPort.java
++++ b/src/java/com/android/internal/telephony/uicc/UiccPort.java
+@@ -358,7 +358,9 @@ public class UiccPort {
+      * Return the IccId corresponding to the port.
+      */
+     public String getIccId() {
+-        if (mIccid != null) {
++        // Legacy HIDL adapters have no ICCID in CardStatus and transport an
++        // empty string. Do not let it hide the genuine SIM records below.
++        if (mIccid != null && !mIccid.isEmpty()) {
+             return mIccid;
+         } else if (mUiccProfile != null) {
+             return mUiccProfile.getIccId();

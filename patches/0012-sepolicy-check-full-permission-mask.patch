@@ -1,0 +1,12 @@
+diff --git a/tools/sepolicy-check.c b/tools/sepolicy-check.c
+--- a/tools/sepolicy-check.c
++++ b/tools/sepolicy-check.c
+@@ -61,7 +61,7 @@ int check(int op, uint16_t arg1, uint16_t arg2) {
+ }
+ 
+ int check_perm(avtab_ptr_t current, perm_datum_t *perm) {
+-	uint16_t perm_bitmask = 1U << (perm->s.value - 1);
++	uint32_t perm_bitmask = 1U << (perm->s.value - 1);
+ 	return (current->datum.data & perm_bitmask) != 0;
+ }
+ 

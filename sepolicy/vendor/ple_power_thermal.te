@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+# Only this legacy diagnostic parameter, not all Qualcomm power controls.
+type ple_sysfs_lpm_enable, fs_type, sysfs_type;
+allow vendor_init ple_sysfs_lpm_enable:file { open write };
+
+# Bounded CPU-QOS requests. Kernel OPP/max/thermal caps are never modified.
+allow hal_power_default sysfs_msm_perf:dir search;
+allow hal_power_default sysfs_msm_perf:file rw_file_perms;
+
+# Maintained mithorium Thermal2 reads real zones/cooling devices, and arms
+# only its configured user_space notification zones. It never writes to
+# step_wise cooling zones or charger limits.
+allow hal_thermal_default proc_stat:file r_file_perms;
+allow hal_thermal_default sysfs_thermal:file w_file_perms;
+allow hal_thermal_default self:netlink_kobject_uevent_socket create_socket_perms_no_ioctl;

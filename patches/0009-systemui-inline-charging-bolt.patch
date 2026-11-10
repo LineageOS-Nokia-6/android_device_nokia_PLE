@@ -1,0 +1,104 @@
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/pipeline/battery/ui/composable/UnifiedBattery.kt b/packages/SystemUI/src/com/android/systemui/statusbar/pipeline/battery/ui/composable/UnifiedBattery.kt
+index a050bca95609..b4f33313c12b 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/pipeline/battery/ui/composable/UnifiedBattery.kt
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/pipeline/battery/ui/composable/UnifiedBattery.kt
+@@ -235,16 +235,28 @@ fun BatteryLayout(
+             } else if (iconStyle == BatteryRepository.ICON_STYLE_TEXT) {
+                 // Empty on purpose
+             } else {
++                // Keep the charging bolt inside the body, together with any percentage.
++                // Other attributions retain their existing external presentation.
++                val inlineCharging = attribution == BatteryGlyph.Bolt
++                val bodyGlyphsProvider = {
++                    val glyphs = glyphsProvider()
++                    if (inlineCharging) {
++                        // The percent-next-to-icon view model already supplies the bolt.
++                        listOf(BatteryGlyph.Bolt) + glyphs.filterNot { it == BatteryGlyph.Bolt }
++                    } else {
++                        glyphs
++                    }
++                }
+                 BatteryBody(
+                     pathSpec = BatteryFrame.bodyPathSpec,
+                     levelProvider = levelProvider,
+-                    glyphsProvider = glyphsProvider,
++                    glyphsProvider = bodyGlyphsProvider,
+                     isFullProvider = isFullProvider,
+                     colorsProvider = colorsProvider,
+                     modifier = Modifier.layoutId(BatteryMeasurePolicy.LayoutId.Frame),
+                     contentDescription = contentDescription,
+                 )
+-                if (attribution != null) {
++                if (attribution != null && !inlineCharging) {
+                     BatteryAttribution(
+                         attr = attribution,
+                         colorsProvider = colorsProvider,
+@@ -257,7 +269,7 @@ fun BatteryLayout(
+                     BatteryCap(
+                         colorsProvider = colorsProvider,
+                         isFullProvider = isFullProvider,
+-                        glyphsProvider = glyphsProvider,
++                        glyphsProvider = bodyGlyphsProvider,
+                         modifier = Modifier.layoutId(BatteryMeasurePolicy.LayoutId.Cap),
+                     )
+                 }
+@@ -520,6 +532,15 @@ fun CircleBatteryBody(
+     }
+ }
+ 
++internal data class BatteryGlyphRowLayout(val scale: Float, val startX: Float)
++
++/** Fit a glyph row inside the 24-unit body, leaving room for the rounded corners. */
++internal fun batteryGlyphRowLayout(widths: List<Float>): BatteryGlyphRowLayout {
++    val totalWidth = widths.sum() + 0.8f * (widths.size - 1).coerceAtLeast(0)
++    val scale = if (totalWidth > 0f) minOf(1f, 20f / totalWidth) else 1f
++    return BatteryGlyphRowLayout(scale, (24f - totalWidth * scale) / 2f)
++}
++
+ /**
+  * Draws just the round-rect piece of the battery frame. If [glyphsProvider] is non-empty, then this
+  * composable also renders the glyphs centered in the frame.
+@@ -546,15 +567,7 @@ fun BatteryBody(
+         val frameColor =
+             getBatteryFrameColor(isFull = isFull, hasGlyphs = glyphs.isNotEmpty(), colors = colors)
+ 
+-        val totalGlyphWidth =
+-            if (glyphs.isEmpty()) {
+-                0f
+-            } else {
+-                // Pads in between each glyph, skipping the first
+-                glyphs.drop(1).fold(glyphs.first().width) { acc: Float, next: BatteryGlyph ->
+-                    acc + INTER_GLYPH_PADDING_PX + next.width
+-                }
+-            }
++        val glyphLayout = batteryGlyphRowLayout(glyphs.map { it.width })
+ 
+         val s = pathSpec.scaleTo(size.width, size.height)
+         scale(scale = s, pivot = Offset.Zero) {
+@@ -589,18 +602,17 @@ fun BatteryBody(
+             }
+ 
+             // Next: draw the glyphs
+-            var horizontalOffset = (BatteryFrame.innerWidth - totalGlyphWidth) / 2f
++            var horizontalOffset = glyphLayout.startX
+             for (glyph in glyphs) {
+-                // Move the glyph to the right spot
+-                val verticalOffset = (BatteryFrame.innerHeight - glyph.height) / 2
+-                inset(
+-                    // Never try and inset more than half of the available size - see b/400246091.
+-                    minOf(horizontalOffset, size.width / 2),
+-                    minOf(verticalOffset, size.height / 2),
+-                ) {
++                val verticalOffset =
++                    (BatteryFrame.innerHeight - glyph.height * glyphLayout.scale) / 2
++                withTransform({
++                    translate(horizontalOffset, verticalOffset)
++                    scale(glyphLayout.scale, pivot = Offset.Zero)
++                }) {
+                     glyph.draw(this, colors)
+                 }
+-                horizontalOffset += glyph.width + INTER_GLYPH_PADDING_PX
++                horizontalOffset += (glyph.width + INTER_GLYPH_PADDING_PX) * glyphLayout.scale
+             }
+         }
+     }

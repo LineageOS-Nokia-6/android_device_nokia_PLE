@@ -1,0 +1,70 @@
+diff --git a/radio/1.4/legacy/Radio.cpp b/radio/1.4/legacy/Radio.cpp
+index 4af7e35..0087e86 100644
+--- a/radio/1.4/legacy/Radio.cpp
++++ b/radio/1.4/legacy/Radio.cpp
+@@ -57,7 +57,9 @@
+ 
+ namespace android::hardware::radio::implementation {
+ 
+-Radio::Radio(sp<V1_0::IRadio> realRadio) : mRealRadio(realRadio) {}
++Radio::Radio(sp<V1_0::IRadio> realRadio, int32_t physicalSlotId) : mRealRadio(realRadio) {
++    mRadioResponse->mPhysicalSlotId = physicalSlotId;
++}
+ 
+ // Methods from ::android::hardware::radio::V1_0::IRadio follow.
+ Return<void> Radio::setResponseFunctions(const sp<V1_0::IRadioResponse>& radioResponse,
+diff --git a/radio/1.4/legacy/Radio.h b/radio/1.4/legacy/Radio.h
+index f79096b..9b255ca 100644
+--- a/radio/1.4/legacy/Radio.h
++++ b/radio/1.4/legacy/Radio.h
+@@ -25,7 +25,7 @@ using ::android::hardware::Void;
+ 
+ struct Radio : public V1_4::IRadio {
+   public:
+-    Radio(sp<V1_0::IRadio> realRadio);
++    Radio(sp<V1_0::IRadio> realRadio, int32_t physicalSlotId);
+ 
+     // Methods from ::android::hardware::radio::V1_0::IRadio follow.
+     Return<void> setResponseFunctions(const sp<V1_0::IRadioResponse>& radioResponse,
+diff --git a/radio/1.4/legacy/RadioResponse.cpp b/radio/1.4/legacy/RadioResponse.cpp
+index 3190c9d..7f8e859 100644
+--- a/radio/1.4/legacy/RadioResponse.cpp
++++ b/radio/1.4/legacy/RadioResponse.cpp
+@@ -15,8 +15,9 @@ Return<void> RadioResponse::getIccCardStatusResponse(const V1_0::RadioResponseIn
+                                                      const V1_0::CardStatus& cardStatus) {
+     V1_4::CardStatus newCS = {};
+     newCS.base.base = cardStatus;
+-    newCS.base.physicalSlotId = -1;
+-    newCS.base.iccid = hidl_string(" ");
++    newCS.base.physicalSlotId = mPhysicalSlotId;
++    // The1.0 callback supplies no ICCID. Leave it genuinely unavailable.
++    newCS.base.iccid = hidl_string("");
+     return mRealRadioResponse->getIccCardStatusResponse_1_4(info, newCS);
+ }
+ 
+diff --git a/radio/1.4/legacy/RadioResponse.h b/radio/1.4/legacy/RadioResponse.h
+index aecd38d..edfe965 100644
+--- a/radio/1.4/legacy/RadioResponse.h
++++ b/radio/1.4/legacy/RadioResponse.h
+@@ -21,6 +21,7 @@ using ::android::hardware::Return;
+ using ::android::hardware::Void;
+ 
+ struct RadioResponse : public V1_4::IRadioResponse {
++    int32_t mPhysicalSlotId = -1;
+     sp<V1_4::IRadioResponse> mRealRadioResponse;
+     V1_0::RadioTechnology mRat = V1_0::RadioTechnology::UNKNOWN;
+     bool mDataRoaming = false;
+diff --git a/radio/1.4/legacy/service.cpp b/radio/1.4/legacy/service.cpp
+index 460abbd..29b3dd7 100644
+--- a/radio/1.4/legacy/service.cpp
++++ b/radio/1.4/legacy/service.cpp
+@@ -45,7 +45,7 @@ int main() {
+             break;
+         }
+ 
+-        slotIdToRadio[slotId] = new Radio(realRadio);
++        slotIdToRadio[slotId] = new Radio(realRadio, slotId - 1);
+         linkDeathToDeath(realRadio);
+     }
+ 
+

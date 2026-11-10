@@ -1,0 +1,27 @@
+diff --git a/Android.bp b/Android.bp
+index 2b08026373..4bfe6b1631 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -8,11 +8,21 @@ cc_defaults {
+     ] + select(soong_config_variable("qtidisplay", "headless"), {
+         "true": ["-DTARGET_HEADLESS"],
+         default: [],
++    }) + select(soong_config_variable("qtidisplay", "target_kernel_version"), {
++        "4.19": ["-DTARGET_ION_ABI_VERSION=2"],
++        default: [],
+     }),
+     shared_libs: [
+         "liblog",
+         "libcutils",
+         "libutils",
+-    ],
++    ] + select(soong_config_variable("qtidisplay", "target_kernel_version"), {
++        "4.19": ["libion"],
++        default: [],
++    }),
++    include_dirs: select(soong_config_variable("qtidisplay", "target_kernel_version"), {
++        "4.19": ["system/memory/libion/include", "system/memory/libion/kernel-headers"],
++        default: [],
++    }),
+     header_libs: ["display_headers"],
+ }

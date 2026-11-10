@@ -1,0 +1,25 @@
+diff --git a/quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt b/quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt
+index 0c8326072f..28e98fd4cb 100644
+--- a/quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt
++++ b/quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt
+@@ -197,6 +197,8 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
+     ): Array<InsetsFrameProvider> {
+         val navBarsFlag =
+             (if (context.isGestureNav || !context.isPrimaryDisplay) FLAG_SUPPRESS_SCRIM else 0) or
++                (if (!context.resources.getBoolean(com.android.internal.R.bool.config_navBarNeedsScrim))
++                    FLAG_SUPPRESS_SCRIM else 0) or
+                 insetsRoundedCornerFlag
+         for (provider in providedInsets) {
+             if (provider.type == navigationBars()) {
+@@ -216,7 +218,10 @@ class TaskbarInsetsController(val context: TaskbarActivityContext) : LoggableTas
+         val navBarsFlag =
+             (if (context.isGestureNav || !context.isPrimaryDisplay)
+                 FLAG_SUPPRESS_SCRIM or FLAG_ANIMATE_RESIZING
+-            else 0) or insetsRoundedCornerFlag
++            else 0) or
++                (if (!context.resources.getBoolean(com.android.internal.R.bool.config_navBarNeedsScrim))
++                    FLAG_SUPPRESS_SCRIM else 0) or
++                insetsRoundedCornerFlag
+         return arrayOf(
+             InsetsFrameProvider(insetsOwner, 0, navigationBars())
+                 .setFlags(

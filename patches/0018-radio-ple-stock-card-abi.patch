@@ -1,0 +1,66 @@
+diff --git a/libril/ril_service.cpp b/libril/ril_service.cpp
+index 5d10edd..ea891b8 100755
+--- a/libril/ril_service.cpp
++++ b/libril/ril_service.cpp
+@@ -24,6 +24,8 @@
+ #include <hwbinder/IPCThreadState.h>
+ #include <hwbinder/ProcessState.h>
+ #include <telephony/ril.h>
++#include <cutils/properties.h>
++#include "ple_stock_abi.h"
+ #include <telephony/ril_mnc.h>
+ #include <telephony/ril_mcc.h>
+ #include <ril_service.h>
+@@ -2962,6 +2964,14 @@ int radio::getIccCardStatusResponse(int slotId,
+         RadioResponseInfo responseInfo = {};
+         populateResponseInfo(responseInfo, serial, responseType, e);
+         CardStatus cardStatus = {CardState::ABSENT, PinState::UNKNOWN, -1, -1, -1, {}};
++        RIL_CardStatus_v6 pleCardStatus = {};
++        char device[PROPERTY_VALUE_MAX];
++        property_get("ro.product.device", device, "");
++        if (!strcmp(device, "PLE") &&
++                ple_stock_abi::normalizeCardStatus(response, responseLen, pleCardStatus)) {
++            response = &pleCardStatus;
++            responseLen = sizeof(pleCardStatus);
++        }
+         RIL_CardStatus_v6 *p_cur = ((RIL_CardStatus_v6 *) response);
+         if (response == NULL || responseLen != sizeof(RIL_CardStatus_v6)
+                 || p_cur->gsm_umts_subscription_app_index >= p_cur->num_applications
+diff --git a/libril/ple_stock_abi.h b/libril/ple_stock_abi.h
+new file mode 100644
+index 0000000..50f12a0
+--- /dev/null
++++ b/libril/ple_stock_abi.h
+@@ -0,0 +1,31 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++#pragma once
++#include <cstring>
++#include <telephony/ril.h>
++
++namespace ple_stock_abi {
++// Exact619F arm64 libril validates544B: header24, eight64B application
++// records, hotswap at536. The standard fields occupy the first44B of each
++// application; four FIH retry counters and hotswap have no standard HIDL field.
++// Never reinterpret the64B stride as standard48B or relax the existing parser.
++inline bool normalizeCardStatus(const void* response, size_t length,
++                                RIL_CardStatus_v6& out) {
++#if defined(__LP64__)
++    static_assert(sizeof(RIL_CardStatus_v6)==408 && sizeof(RIL_AppStatus)==48);
++    if (!response || length!=544) return false;
++    const auto* raw=static_cast<const unsigned char*>(response);
++    int count;
++    std::memcpy(&count,raw+20,sizeof(count));
++    if (count<0 || count>RIL_CARD_MAX_APPS) return false;
++    std::memset(&out,0,sizeof(out));
++    std::memcpy(&out,raw,24);
++    for (int i=0;i<count;++i) {
++        std::memcpy(&out.applications[i],raw+24+i*64,44);
++    }
++    return true;
++#else
++    (void)response;(void)length;(void)out;
++    return false;
++#endif
++}
++}
+

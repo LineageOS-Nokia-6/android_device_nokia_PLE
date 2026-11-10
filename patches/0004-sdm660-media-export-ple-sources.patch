@@ -1,0 +1,30 @@
+diff --git a/Android.bp b/Android.bp
+new file mode 100644
+index 0000000..759f877
+--- /dev/null
++++ b/Android.bp
+@@ -0,0 +1,24 @@
++// Copyright (C) 2026 The LineageOS Project
++// SPDX-License-Identifier: Apache-2.0
++// Export source only. PLE binds it to its exact split-usage display ABI rather
++// than importing the newer sdm660 display binaries or a Xiaomi device tree.
++filegroup {
++    name: "ple_omx_core_sources",
++    srcs: ["mm-core/src/common/omx_core_cmp.cpp", "mm-core/src/common/qc_omx_core.c"],
++}
++filegroup {
++    name: "ple_omx_common_sources",
++    srcs: ["mm-video-v4l2/vidc/common/src/*.cpp"],
++}
++filegroup {
++    name: "ple_omx_venc_sources",
++    srcs: ["mm-video-v4l2/vidc/venc/src/omx_video_base.cpp", "mm-video-v4l2/vidc/venc/src/omx_video_encoder.cpp", "mm-video-v4l2/vidc/venc/src/video_encoder_device_v4l2.cpp"],
++}
++filegroup {
++    name: "ple_omx_vdec_sources",
++    srcs: ["mm-video-v4l2/vidc/vdec/src/frameparser.cpp", "mm-video-v4l2/vidc/vdec/src/h264_utils.cpp", "mm-video-v4l2/vidc/vdec/src/hevc_utils.cpp", "mm-video-v4l2/vidc/vdec/src/mp4_utils.cpp", "mm-video-v4l2/vidc/vdec/src/omx_vdec_v4l2.cpp", "mm-video-v4l2/vidc/vdec/src/ts_parser.cpp"],
++}
++filegroup {
++    name: "ple_c2d_sources",
++    srcs: ["libc2dcolorconvert/C2DColorConverter.cpp"],
++}

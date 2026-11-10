@@ -1,0 +1,170 @@
+diff --git a/camera/aidl/device/CameraDeviceSession.cpp b/camera/aidl/device/CameraDeviceSession.cpp
+index 8cc0190..8daee5f 100644
+--- a/camera/aidl/device/CameraDeviceSession.cpp
++++ b/camera/aidl/device/CameraDeviceSession.cpp
+@@ -8,6 +8,7 @@
+ #define ATRACE_TAG ATRACE_TAG_CAMERA
+ 
+ #include "CameraDeviceSession.h"
++#include "LegacyCameraBlob.h"
+ 
+ #include <CameraModule.h>
+ #include <aidl/android/hardware/camera/device/ErrorMsg.h>
+@@ -15,6 +16,7 @@
+ #include <aidlcommonsupport/NativeHandle.h>
+ #include <cutils/properties.h>
+ #include <cutils/trace.h>
++#include <ui/GraphicBufferMapper.h>
+ 
+ namespace android {
+ namespace hardware {
+@@ -993,6 +995,7 @@ bool CameraDeviceSession::preProcessConfigurationLocked(
+                     (android_dataspace_t)requestedConfiguration.streams[i].dataSpace;
+             mStreamMap[id].rotation = (int)requestedConfiguration.streams[i].rotation;
+             mStreamMap[id].usage = (uint32_t)requestedConfiguration.streams[i].usage;
++            mStreamMap[id].mBlobBufferSize = requestedConfiguration.streams[i].bufferSize;
+         }
+         // It is possible for the entry in 'mStreamMap' to get initialized by an older
+         // HIDL API. Make sure that the physical id is always initialized when using
+@@ -1128,13 +1131,15 @@ ndk::ScopedAStatus CameraDeviceSession::flush() {
+ }
+ 
+ ndk::ScopedAStatus CameraDeviceSession::getCaptureRequestMetadataQueue(
+-        MQDescriptor<int8_t, SynchronizedReadWrite>* _aidl_return) {
++        ::aidl::android::hardware::common::fmq::MQDescriptor<
++                int8_t, ::aidl::android::hardware::common::fmq::SynchronizedReadWrite>* _aidl_return) {
+     *_aidl_return = mRequestMetadataQueue->dupeDesc();
+     return fromStatus(Status::OK);
+ }
+ 
+ ndk::ScopedAStatus CameraDeviceSession::getCaptureResultMetadataQueue(
+-        MQDescriptor<int8_t, SynchronizedReadWrite>* _aidl_return) {
++        ::aidl::android::hardware::common::fmq::MQDescriptor<
++                int8_t, ::aidl::android::hardware::common::fmq::SynchronizedReadWrite>* _aidl_return) {
+     *_aidl_return = mResultMetadataQueue->dupeDesc();
+     return fromStatus(Status::OK);
+ }
+@@ -1530,10 +1535,44 @@ status_t CameraDeviceSession::constructCaptureResult(CaptureResult& result,
+         }
+ 
+         result.outputBuffers[i].status = (BufferStatus)hal_result->output_buffers[i].status;
++        int releaseFence = hal_result->output_buffers[i].release_fence;
++        const auto& buffer = hal_result->output_buffers[i];
++        const auto* stream = static_cast<const Camera3Stream*>(buffer.stream);
++        if (buffer.status == CAMERA3_BUFFER_STATUS_OK && buffer.buffer != nullptr &&
++            stream->format == HAL_PIXEL_FORMAT_BLOB &&
++            stream->data_space == HAL_DATASPACE_V0_JFIF) {
++            static_assert(sizeof(camera3_jpeg_blob_t) == 8);
++            // Preserve ownership of the HAL fence until the buffer has been
++            // locked and unlocked; the mapper may return a new write fence.
++            bool valid = stream->mBlobBufferSize >= 8 && waitForLegacyJpegFence(releaseFence);
++            if (valid) {
++                void* mapped = sHandleImporter.lock(*buffer.buffer,
++                        GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_RARELY,
++                        static_cast<size_t>(stream->mBlobBufferSize));
++                valid = mapped != nullptr;
++                if (mapped != nullptr) {
++                    valid = normalizeLegacyJpegBlob(mapped, stream->mBlobBufferSize);
++                    int writeFence = -1;
++                    // HandleImporter::unlock discards mapper errors. Preserve
++                    // the status here so failed publication is never an OK JPEG.
++                    status_t unlockStatus = GraphicBufferMapper::get().unlockAsync(
++                            *buffer.buffer, &writeFence);
++                    valid = legacyJpegPublicationSucceeded(valid, unlockStatus);
++                    if (unlockStatus == OK || writeFence >= 0) {
++                        if (releaseFence >= 0) ::close(releaseFence);
++                        releaseFence = writeFence;
++                    }
++                }
++            }
++            if (!valid) {
++                ALOGE("%s: invalid or inaccessible legacy JPEG blob", __FUNCTION__);
++                result.outputBuffers[i].status = BufferStatus::ERROR;
++            }
++        }
+         // skip acquire fence since it's of no use to camera service
+-        if (hal_result->output_buffers[i].release_fence != -1) {
++        if (releaseFence != -1) {
+             native_handle_t* handle = native_handle_create(/*numFds*/ 1, /*numInts*/ 0);
+-            handle->data[0] = hal_result->output_buffers[i].release_fence;
++            handle->data[0] = releaseFence;
+             result.outputBuffers[i].releaseFence = makeToAidlIfNotNull(handle);
+         } else {
+             result.outputBuffers[i].releaseFence = makeToAidlIfNotNull(nullptr);
+diff --git a/camera/aidl/device/convert.cpp b/camera/aidl/device/convert.cpp
+index ae8eb87..f6eb5bd 100644
+--- a/camera/aidl/device/convert.cpp
++++ b/camera/aidl/device/convert.cpp
+@@ -95,6 +95,7 @@ void convertToAidl(const camera3_stream_configuration_t& src, std::vector<HalStr
+ 
+ void convertFromAidl(const Stream& src, Camera3Stream* dst) {
+     dst->mId = src.id;
++    dst->mBlobBufferSize = src.bufferSize;
+     dst->stream_type = (int)src.streamType;
+     dst->width = src.width;
+     dst->height = src.height;
+diff --git a/camera/aidl/device/convert.h b/camera/aidl/device/convert.h
+index 8ecc2ae..4b6429c 100644
+--- a/camera/aidl/device/convert.h
++++ b/camera/aidl/device/convert.h
+@@ -38,6 +38,7 @@ namespace implementation {
+ // fromt a downcasted camera3_stream
+ struct Camera3Stream : public camera3_stream {
+     int mId;
++    int32_t mBlobBufferSize = 0;
+ };
+ 
+ using ::aidl::android::hardware::camera::common::Status;
+diff --git a/camera/aidl/device/LegacyCameraBlob.h b/camera/aidl/device/LegacyCameraBlob.h
+new file mode 100644
+index 0000000..fa65872
+--- /dev/null
++++ b/camera/aidl/device/LegacyCameraBlob.h
+@@ -0,0 +1,47 @@
++// Copyright (C) 2026 The LineageOS Project
++// SPDX-License-Identifier: Apache-2.0
++#pragma once
++
++#include <cstddef>
++#include <cstdint>
++#include <cstring>
++#include <limits>
++#include <cerrno>
++#include <poll.h>
++
++namespace android::hardware::camera::device::implementation {
++
++// Borrow the HAL fence, without dup(): descriptor exhaustion must not be
++// mistaken for the valid "no fence" sentinel. Ownership stays with caller.
++inline bool waitForLegacyJpegFence(int fd, int timeoutMs = 1000) {
++    if (fd == -1) return true;
++    if (fd < 0) return false;
++    pollfd descriptor{fd, POLLIN, 0};
++    int result;
++    do { result = poll(&descriptor, 1, timeoutMs); } while (result < 0 && errno == EINTR);
++    return result > 0 && (descriptor.revents & POLLIN) &&
++           !(descriptor.revents & (POLLERR | POLLNVAL));
++}
++
++inline bool legacyJpegPublicationSucceeded(bool contentsValid, int unlockStatus) {
++    return contentsValid && unlockStatus == 0;
++}
++
++// camera3_jpeg_blob_t has uint16_t id + two unspecified padding bytes.
++// AIDL CameraBlob instead has an int32 id at the same offset. Never pass
++// legacy padding to ImageReader as the upper half of that id.
++inline bool normalizeLegacyJpegBlob(void* data, size_t capacity) {
++    if (data == nullptr || capacity < 8) return false;
++    auto* footer = static_cast<uint8_t*>(data) + capacity - 8;
++    uint16_t oldId;
++    uint32_t length;
++    std::memcpy(&oldId, footer, sizeof(oldId));
++    std::memcpy(&length, footer + 4, sizeof(length));
++    if (oldId != 0x00ff || length == 0 || length > capacity - 8 ||
++        length > static_cast<uint32_t>(std::numeric_limits<int32_t>::max())) return false;
++    const uint32_t newId = oldId;
++    std::memcpy(footer, &newId, sizeof(newId));
++    return true;
++}
++
++}  // namespace android::hardware::camera::device::implementation

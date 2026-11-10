@@ -1,0 +1,9 @@
+# Only the exact raw PLE amplifier bus and namespaced stock property ABI.
+type ple_audio_i2c_device, dev_type;
+vendor_internal_prop(vendor_ple_audio_prop)
+allow hal_audio_default ple_audio_i2c_device:chr_file rw_file_perms;
+allowxperm hal_audio_default ple_audio_i2c_device:chr_file ioctl { 0x0703 0x0705 0x0707 };
+set_prop(hal_audio_default, vendor_ple_audio_prop)
+set_prop(vendor_init, vendor_ple_audio_prop)
+
+# No diag device, raw blocks, persist writes, permissive domain or policy bypass.

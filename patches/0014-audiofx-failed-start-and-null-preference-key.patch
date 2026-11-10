@@ -1,0 +1,66 @@
+diff --git a/src/org/lineageos/audiofx/activity/ActivityMusic.java b/src/org/lineageos/audiofx/activity/ActivityMusic.java
+index 91f5183..10b1c8b 100644
+--- a/src/org/lineageos/audiofx/activity/ActivityMusic.java
++++ b/src/org/lineageos/audiofx/activity/ActivityMusic.java
+@@ -91,7 +91,7 @@ public class ActivityMusic extends Activity {
+                 @Override
+                 public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+                         String key) {
+-                    if (key.equals(Constants.SAVED_DEFAULTS) && defaultsSetup()) {
++                    if (Constants.SAVED_DEFAULTS.equals(key) && defaultsSetup()) {
+                         sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
+                         mConfig.onResetDefaults();
+                         init(savedInstanceState);
+diff --git a/src/org/lineageos/audiofx/service/AudioFxService.java b/src/org/lineageos/audiofx/service/AudioFxService.java
+index 77083e4..77a989c 100644
+--- a/src/org/lineageos/audiofx/service/AudioFxService.java
++++ b/src/org/lineageos/audiofx/service/AudioFxService.java
+@@ -65,10 +65,12 @@ public class AudioFxService extends Service
+         }
+ 
+         private boolean checkService() {
+-            if (mService.get() == null) {
+-                Log.e("AudioFx-LocalBinder", "Service was null!");
++            AudioFxService service = mService.get();
++            if (service == null || service.mSessionManager == null) {
++                Log.e("AudioFx-LocalBinder", "Service is not initialized!");
++                return false;
+             }
+-            return mService.get() != null;
++            return true;
+         }
+ 
+         public void update(int flags) {
+@@ -118,6 +120,12 @@ public class AudioFxService extends Service
+ 
+     @Override
+     public int onStartCommand(Intent intent, int flags, int startId) {
++        if (mSessionManager == null) {
++            // onCreate can stop this service when the effects backend is not
++            // ready. A queued start must not dereference the missing manager.
++            stopSelf(startId);
++            return START_NOT_STICKY;
++        }
+         if (DEBUG) {
+             Log.i(TAG, "onStartCommand() called with " + "intent = [" + intent + "], flags = ["
+                     + flags + "], startId = [" + startId + "]");
+@@ -163,6 +171,9 @@ public class AudioFxService extends Service
+         mOutputListener.removeCallback(this, mSessionManager, mDevicePrefs);
+         if (mSessionManager != null) {
+             mSessionManager.onDestroy();
++        } else if (mHandler != null) {
++            // No SessionManager exists to stop the backend after init failed.
++            mHandler.getLooper().quit();
+         }
+ 
+         super.onDestroy();
+@@ -175,6 +186,9 @@ public class AudioFxService extends Service
+ 
+     @Override
+     public void onTrimMemory(int level) {
++        if (mSessionManager == null) {
++            return;
++        }
+         if (DEBUG) Log.d(TAG, "onTrimMemory: level=" + level);
+         switch (level) {
+             case TRIM_MEMORY_BACKGROUND:

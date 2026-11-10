@@ -1,0 +1,16 @@
+diff --git a/radio/1.4/legacy/Helpers.cpp b/radio/1.4/legacy/Helpers.cpp
+--- a/radio/1.4/legacy/Helpers.cpp
++++ b/radio/1.4/legacy/Helpers.cpp
+@@ -147,8 +147,10 @@ hidl_vec<hidl_string> DelimitedStrToVec(std::string delimitedStr){
+     std::sregex_token_iterator end;
+ 
+     std::vector<hidl_string> tokens;
+-    for ( ; iter != end; ++iter)
+-        tokens.push_back(hidl_string(*iter));
++    for ( ; iter != end; ++iter) {
++        if (iter->length() != 0)
++            tokens.push_back(hidl_string(*iter));
++    }
+ 
+     return hidl_vec(tokens);
+ }

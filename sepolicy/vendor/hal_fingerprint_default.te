@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+# Both exact619F endpoints use vendor libbinder, not the system Binder bus.
+vndbinder_use(hal_fingerprint_default)
+allow hal_fingerprint_default ple_goodix_service:service_manager find;
+binder_call(hal_fingerprint_default, ple_goodix)
+binder_call(ple_goodix, hal_fingerprint_default)
+get_prop(hal_fingerprint_default, vendor_ple_goodix_prop)
+set_prop(hal_fingerprint_default, vendor_ple_goodix_prop)
+
+# firstAPI25 legitimately selects /data/system/users/<id>/fpdata in the
+# maintained HIDL session adapter. No access to the other credential files.
+typeattribute hal_fingerprint_default data_between_core_and_vendor_violators;
+allow hal_fingerprint_default system_data_file:dir search;
+allow hal_fingerprint_default fingerprintd_data_file:dir rw_dir_perms;
+allow hal_fingerprint_default fingerprintd_data_file:file create_file_perms;
+
+# Exact619F TA asks qseecomd for /data/system/fingerprint, not generic system
+# data or framework credential files. Init creates its correctly labeled root;
+# TEE may populate that biometric type without parent system-data write access.
+typeattribute tee data_between_core_and_vendor_violators;
+allow tee fingerprintd_data_file:dir create_dir_perms;
+allow tee fingerprintd_data_file:file create_file_perms;

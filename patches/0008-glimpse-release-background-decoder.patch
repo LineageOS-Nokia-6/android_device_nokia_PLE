@@ -1,0 +1,34 @@
+diff --git a/app/src/main/java/org/lineageos/glimpse/viewmodels/LocalPlayerViewModel.kt b/app/src/main/java/org/lineageos/glimpse/viewmodels/LocalPlayerViewModel.kt
+index 3441779..9472920 100644
+--- a/app/src/main/java/org/lineageos/glimpse/viewmodels/LocalPlayerViewModel.kt
++++ b/app/src/main/java/org/lineageos/glimpse/viewmodels/LocalPlayerViewModel.kt
+@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
+ import androidx.media3.common.AudioAttributes
+ import androidx.media3.common.C
+ import androidx.media3.common.MediaItem
++import androidx.media3.common.Player
+ import androidx.media3.common.util.UnstableApi
+ import androidx.media3.exoplayer.ExoPlayer
+ import androidx.media3.exoplayer.source.ProgressiveMediaSource
+@@ -425,6 +426,11 @@ class LocalPlayerViewModel(
+      * @see ExoPlayer.play
+      */
+     fun play() {
++        // A background viewer must not keep a hardware decoder reserved while
++        // another ViewActivity opens. stop() retains the item and position.
++        if (exoPlayer.playbackState == Player.STATE_IDLE && exoPlayer.mediaItemCount > 0) {
++            exoPlayer.prepare()
++        }
+         exoPlayer.play()
+     }
+ 
+@@ -433,6 +439,9 @@ class LocalPlayerViewModel(
+      */
+     fun pause() {
+         exoPlayer.pause()
++        // Lifecycle pause, not the player's pause button: release its codec.
++        // Otherwise two paused/resumed 1080p viewers exceed legacy VIDC load.
++        exoPlayer.stop()
+     }
+ 
+     /**

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+type ple_goodix, domain;
+type ple_goodix_exec, exec_type, vendor_file_type, file_type;
+type ple_goodix_device, dev_type;
+type ple_goodix_service, vndservice_manager_type;
+vendor_internal_prop(vendor_ple_goodix_prop)
+
+init_daemon_domain(ple_goodix)
+vndbinder_use(ple_goodix)
+add_service(ple_goodix, ple_goodix_service)
+
+allow ple_goodix ple_goodix_device:chr_file rw_file_perms;
+allowxperm ple_goodix ple_goodix_device:chr_file ioctl { 0x4700-0x470a };
+allow ple_goodix ion_device:chr_file rw_file_perms;
+allow ple_goodix tee_device:chr_file rw_file_perms;
+allow ple_goodix self:process signal;
+r_dir_file(ple_goodix, vendor_firmware_file)
+
+set_prop(ple_goodix, vendor_ple_goodix_prop)
+set_prop(vendor_init, vendor_ple_goodix_prop)
+get_prop(ple_goodix, bootloader_prop)
+
+# No persist, raw block, RPMB, broad device access, permissive rule or dump grant.

@@ -1,0 +1,17 @@
+diff --git a/mm-video-v4l2/vidc/venc/src/omx_video_encoder.cpp b/mm-video-v4l2/vidc/venc/src/omx_video_encoder.cpp
+index 67f950e8c..33c9b7690 100644
+--- a/mm-video-v4l2/vidc/venc/src/omx_video_encoder.cpp
++++ b/mm-video-v4l2/vidc/venc/src/omx_video_encoder.cpp
+@@ -1646,8 +1646,10 @@ OMX_ERRORTYPE  omx_venc::set_parameter(OMX_IN OMX_HANDLETYPE     hComp,
+                         DEBUG_PRINT_ERROR("ERROR: Request for setting PlusPType failed");
+                         return OMX_ErrorUnsupportedSetting;
+                     }
+-                if((pParam->eHierarchicalCodingType == QOMX_HIERARCHICALCODING_B) && pParam->nNumLayers)
+-                    hier_b_enabled = true;
++                    if ((pParam->eHierarchicalCodingType == QOMX_HIERARCHICALCODING_B) &&
++                            pParam->nNumLayers) {
++                        hier_b_enabled = true;
++                    }
+                     m_sHierLayers.nNumLayers = pParam->nNumLayers;
+                     m_sHierLayers.eHierarchicalCodingType = pParam->eHierarchicalCodingType;
+                 } else {

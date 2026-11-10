@@ -1,0 +1,56 @@
+diff --git a/libc2dcolorconvert/Android.bp b/libc2dcolorconvert/Android.bp
+index b21c1417d..2d41350a3 100644
+--- a/libc2dcolorconvert/Android.bp
++++ b/libc2dcolorconvert/Android.bp
+@@ -1,5 +1,9 @@
+ cc_library_shared {
+     name: "libc2dcolorconvert",
++    enabled: select(soong_config_variable("nokia_ple", "modern_media"), {
++        true: false,
++        default: true,
++    }),
+     vendor: true,
+ 
+     srcs: [
+diff --git a/mm-core/Android.bp b/mm-core/Android.bp
+index bb32412d7..2426c4478 100644
+--- a/mm-core/Android.bp
++++ b/mm-core/Android.bp
+@@ -1,5 +1,9 @@
+ cc_library_shared {
+     name: "libOmxCore",
++    enabled: select(soong_config_variable("nokia_ple", "modern_media"), {
++        true: false,
++        default: true,
++    }),
+     vendor: true,
+ 
+     srcs: [
+diff --git a/mm-video-v4l2/vidc/vdec/Android.bp b/mm-video-v4l2/vidc/vdec/Android.bp
+index 915543208..de0bad407 100644
+--- a/mm-video-v4l2/vidc/vdec/Android.bp
++++ b/mm-video-v4l2/vidc/vdec/Android.bp
+@@ -1,5 +1,9 @@
+ cc_library_shared {
+     name: "libOmxVdec",
++    enabled: select(soong_config_variable("nokia_ple", "modern_media"), {
++        true: false,
++        default: true,
++    }),
+     vendor: true,
+ 
+     srcs: [
+diff --git a/mm-video-v4l2/vidc/venc/Android.bp b/mm-video-v4l2/vidc/venc/Android.bp
+index d90783571..e131d7563 100644
+--- a/mm-video-v4l2/vidc/venc/Android.bp
++++ b/mm-video-v4l2/vidc/venc/Android.bp
+@@ -1,5 +1,9 @@
+ cc_library_shared {
+     name: "libOmxVenc",
++    enabled: select(soong_config_variable("nokia_ple", "modern_media"), {
++        true: false,
++        default: true,
++    }),
+     vendor: true,
+ 
+     srcs: [

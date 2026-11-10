@@ -1,0 +1,4 @@
+# No PLE allow is necessary: actual platform-selected policy already grants
+# hal_power_stats_default CPU-sysfs file read/open/getattr and directory search.
+# Do not add duplicate/broader access or permit CPU writes. Required rules are
+# verified in the selected binary; only the executable path context is new.

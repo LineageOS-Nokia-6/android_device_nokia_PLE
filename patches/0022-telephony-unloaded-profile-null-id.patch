@@ -1,0 +1,13 @@
+diff --git a/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java b/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java
+--- a/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java
++++ b/src/java/com/android/internal/telephony/subscription/SubscriptionManagerService.java
+@@ -1423,7 +1423,8 @@ public class SubscriptionManagerService extends ISub.Stub {
+     @NonNull
+     private String getIccId(int phoneId) {
+         UiccPort port = mUiccController.getUiccPort(phoneId);
+-        return (port == null) ? "" : getStrippedIccid(port.getIccId());
++        // The legacy port can exist before asynchronous SIM records supply its ID.
++        return (port == null) ? "" : getStrippedIccid(TextUtils.emptyIfNull(port.getIccId()));
+     }
+ 
+     /**
