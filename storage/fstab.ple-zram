@@ -1,0 +1,5 @@
+# TA-1025/current PLE kernel: MemTotal2886024KiB + SwapTotal5502584KiB =8GiB.
+# Add one4096B swap-header page. Native64-bit fs_mgr avoids mksh32 overflow.
+# No backing file/device or writeback; retain the kernel's defaultLZ4.
+# Recalculate if the kernel's usable RAM/reserved-memory map changes.
+/dev/block/zram0 none swap defaults wait,zramsize=5634650112,swapprio=32767,max_comp_streams=-1

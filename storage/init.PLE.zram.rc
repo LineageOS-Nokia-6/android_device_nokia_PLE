@@ -1,0 +1,4 @@
+# Separate from filesystem/recovery fstab; initialize swap once in normal boot.
+# The builtin runs in main init using existing swap/sysfs SELinux permissions.
+on post-fs-data
+    swapon_all /vendor/etc/fstab.ple-zram

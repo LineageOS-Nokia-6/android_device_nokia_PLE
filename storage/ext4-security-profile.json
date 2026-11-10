@@ -1,0 +1,15 @@
+{
+  "status": "offline preparation only; NOT selected or activated",
+  "block_size": 4096,
+  "inode_size": 512,
+  "mke2fs_features": ["encrypt", "verity", "quota", "project", "metadata_csum", "64bit", "extent", "^orphan_file"],
+  "fbe": "aes-256-xts:aes-256-cts:v2",
+  "metadata_encryption": "not enabled: no verified persistent metadata contract",
+  "inlinecrypt": "not requested: hardware/storage contract not qualified",
+  "activation_blockers": [
+    "explicit user-approved data backup and migration/format plan",
+    "real Gatekeeper HAL/auth-token and Keymaster/Keystore operations qualification",
+    "new filesystem and DE/CE unlock/reboot/recovery tests",
+    "data-safe rollback and accepted recovery capability"
+  ]
+}

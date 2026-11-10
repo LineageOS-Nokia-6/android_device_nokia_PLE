@@ -1,0 +1,9 @@
+# Nokia 619F runs the legacy Keymaster/QSEE stack as system:system,drmrpc.
+# Override the generic modern service account so the stock libQSEEComAPI can
+# open /dev/ion with the same credentials it had on Android 9.
+service vendor.keymaster-3-0 /vendor/bin/hw/android.hardware.keymaster@3.0-service
+    override
+    interface android.hardware.keymaster@3.0::IKeymasterDevice default
+    class early_hal
+    user system
+    group system drmrpc

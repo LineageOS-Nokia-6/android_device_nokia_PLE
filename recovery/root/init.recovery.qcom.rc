@@ -1,7 +1,21 @@
 on init
     setprop sys.usb.configfs 1
-    setprop sys.usb.controller 78d9000.usb
+    setprop sys.usb.controller msm_hsusb
 
 on property:sys.usb.config=adb && property:sys.usb.configfs=1
     write /config/usb_gadget/g1/idVendor 18d1
     write /config/usb_gadget/g1/idProduct d001
+
+on fs
+    wait /dev/block/platform/soc/${ro.boot.bootdevice}
+    symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
+
+service ple-usbdiag /system/bin/sh /system/etc/ple-usbdiag.sh
+    disabled
+    oneshot
+    user root
+    group root shell log
+    seclabel u:r:recovery:s0
+
+on boot
+    start ple-usbdiag

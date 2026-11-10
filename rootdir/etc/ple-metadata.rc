@@ -1,0 +1,10 @@
+# Copyright (C) 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+# Install on system, not vendor: mkdir must run in platform init context.
+# Vendor hw init is imported first and mounts cache during its fs action.
+# Complete this bind before core post-fs restores /metadata labels and
+# platform aconfigd initializes its real storage. No security-policy bypass.
+# Cache-backed metadata is bringup-only; no FBE/staged APEX/DSU/production OTA.
+on fs
+    mkdir /cache/ple-metadata 0771 root system
+    mount none /cache/ple-metadata /metadata bind

@@ -4,7 +4,93 @@
 on early-init
     write /sys/fs/selinux/checkreqprot 0
 
+on init
+    # PLE fbdev has no DRM idle-state contract. Use finite timed interaction
+    # requests, not Pixel's default 1.4..5.65-second display-idle heuristic.
+    setprop vendor.powerhal.disp.idle_support false
+    setprop vendor.powerhal.interaction.min 100
+    setprop vendor.powerhal.interaction.max 400
+    setprop vendor.powerhal.interaction.offset 0
+
+on early-fs
+    # The 4.19 driver defers nonboot SD hosts. Finish microSD registration so
+    # runtime PM can gate its clocks before system suspend (Mi8937/mithorium).
+    write /sys/kernel/sdhci_msm/add_host 1
+
 on fs
+    wait /dev/block/platform/soc/${ro.boot.bootdevice}
+    symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
+    # Exact 619F librpmb opens the legacy block path. Linux 4.19 exposes the
+    # RPMB character node; preserve its root-only permissions and provide the
+    # path before qseecomd initializes on post-fs. Do not poll the protected
+    # node from vendor_init; ueventd creates it before this fs action.
+    symlink /dev/mmcblk0rpmb /dev/block/mmcblk0rpmb
     mkdir /mnt/vendor/persist 0771 system system
     mkdir /vendor/firmware_mnt 0771 system system
     mkdir /vendor/dsp 0771 system system
+    mount_all /vendor/etc/fstab.qcom --early
+
+on late-fs
+    mount_all /vendor/etc/fstab.qcom --late
+
+# Normal logging stays in logd/pstore. The temporary always-on Phase8 file
+# collectors are no longer started: they waste I/O and retain deleted inodes.
+
+# Keep a minimal ADB-only configfs composition available during bring-up.  The
+# controller name and VID/PID are the same values proven by PLE recovery.
+on boot
+    mount configfs none /config
+    mkdir /config/usb_gadget/g1 0770
+    mkdir /config/usb_gadget/g1/strings/0x409 0770
+    write /config/usb_gadget/g1/bcdUSB 0x0200
+    write /config/usb_gadget/g1/idVendor 0x18d1
+    write /config/usb_gadget/g1/idProduct 0xd001
+    write /config/usb_gadget/g1/strings/0x409/serialnumber ${ro.serialno}
+    write /config/usb_gadget/g1/strings/0x409/manufacturer ${ro.product.manufacturer}
+    write /config/usb_gadget/g1/strings/0x409/product ${ro.product.vendor.model}
+    mkdir /config/usb_gadget/g1/functions/ffs.adb
+    mkdir /config/usb_gadget/g1/configs/b.1 0770
+    mkdir /config/usb_gadget/g1/configs/b.1/strings/0x409 0770
+    write /config/usb_gadget/g1/configs/b.1/MaxPower 500
+    mkdir /dev/usb-ffs 0775 shell system
+    mkdir /dev/usb-ffs/adb 0770 shell system
+    mount functionfs adb /dev/usb-ffs/adb uid=2000,gid=1000,rmode=0770,fmode=0660
+    setprop sys.usb.controller msm_hsusb
+    setprop sys.usb.configfs 1
+    setprop sys.usb.config adb
+
+# Exact PLE619F post_boot MSM8937/soc294 branch for kernel >=4.9.
+# 3.18 uses interactive; stock itself selects schedutil on modern kernels.
+# Its rate_limit_us=0 maps to both 4.19 direction-specific rate limits.
+# Keep hardware OPPs, thermal maximum limits and accepted camera cpusets intact.
+on property:sys.boot_completed=1
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor schedutil
+    write /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us 0
+    write /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us 0
+    write /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq 1094400
+    write /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load 85
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq 960000
+    write /sys/devices/system/cpu/cpufreq/policy4/scaling_governor schedutil
+    write /sys/devices/system/cpu/cpufreq/policy4/schedutil/up_rate_limit_us 0
+    write /sys/devices/system/cpu/cpufreq/policy4/schedutil/down_rate_limit_us 0
+    write /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_freq 768000
+    write /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_load 85
+    write /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq 768000
+    # Exact619F MSM8937/soc294 explicitly disables L2-GDHS before enabling
+    # low power. Preserve that firmware-facing restriction on4.19 too.
+    write /sys/module/lpm_levels/system/pwr/pwr-l2-gdhs/idle_enabled N
+    write /sys/module/lpm_levels/system/pwr/pwr-l2-gdhs/suspend_enabled N
+    write /sys/module/lpm_levels/system/perf/perf-l2-gdhs/idle_enabled N
+    write /sys/module/lpm_levels/system/perf/perf-l2-gdhs/suspend_enabled N
+    write /sys/module/lpm_levels/parameters/sleep_disabled N
+    # Start libperfmgr only after the persistent stock CPU profile is applied.
+    setprop vendor.powerhal.init 1
+
+# libperfmgr owns finite interaction/display/launch requests and resets this
+# property after expiry/cancellation. Init uses its existing sysfs authority;
+# no broader PowerHAL/ODM policy or persistent GPU floor is needed.
+on property:vendor.powerhal.gpu_boost=1
+    write /sys/class/kgsl/kgsl-3d0/devfreq/min_freq 450000000
+
+on property:vendor.powerhal.gpu_boost=0
+    write /sys/class/kgsl/kgsl-3d0/devfreq/min_freq 216000000

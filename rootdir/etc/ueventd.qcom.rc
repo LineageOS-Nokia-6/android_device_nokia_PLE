@@ -1,4 +1,35 @@
 /dev/block/platform/soc/7824900.sdhci/by-name/config    0600   system     system
 /dev/input/event*                                       0660   root       input
 /dev/graphics/fb0                                       0660   root       graphics
-/dev/kgsl-3d0                                           0660   system     graphics
+# Exact PLE 619F / maintained Mi8937 GPU rule: app RenderThreads also open
+# KGSL directly. SELinux gpu_device restrictions remain unchanged.
+/dev/kgsl-3d0                                           0666   system     system
+/dev/ion                                                0664   system     system
+/dev/qseecom                                            0660   system     drmrpc
+/dev/goodix_fp             0600   system     system
+
+# Exact installed Nokia modem firmware (fstab mounts it read-only).
+firmware_directories /vendor/firmware_mnt/image/
+/dev/wcnss_wlan            0660   system     system
+/dev/wcnss_ctrl            0660   system     system
+# Exact PLE Pronto CMD/EVT and ACL, using the4.19 packet ABI.
+/dev/smd3                  0660   bluetooth  bluetooth
+/dev/smd2                  0660   bluetooth  bluetooth
+/dev/i2c-6                 0660   media      audio
+/dev/msm_audio_cal         0660   system     audio
+/dev/msm_rtac              0660   system     audio
+
+# Exact PLE619F camera node ownership. No world-writable camera devices.
+/dev/video*               0660   system     camera
+/dev/media*               0660   system     camera
+/dev/v4l-subdev*          0660   system     camera
+/dev/msm_camera/*         0660   system     camera
+/dev/jpeg*                0660   system     camera
+# Stock SSC QTimer character device, not a firmware-loading control.
+/dev/sensors               0660   system     system
+# Native619F PM owner of the integrated modem, not arbitrary SSR devices.
+/dev/subsys_modem          0660   system     system
+# Exact 619F / Mi8937 rule: SDM's rotator is opened by the system-UID composer.
+/dev/mdss_rotator          0664   system     system
+# Exact 619F / Mi8937 write access for HWC's existing idle-time control.
+/sys/class/graphics/fb0    idle_time 0664   system     graphics

@@ -1,0 +1,8 @@
+on post-fs
+    start vendor.qseecomd
+    exec - system system -- /vendor/bin/init.qti.qseecomd.sh
+
+service vendor.qseecomd /vendor/bin/qseecomd
+    class core
+    user root
+    group root
