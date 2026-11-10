@@ -1,0 +1,24 @@
+// Copyright (C) 2024-2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+// Source: LineageOS/android_hardware_lineage_interfaces,
+// 805d25348106e8cc6f378c0b153789f3cf8da667, with legacy callback/error fixes.
+cc_binary {
+    name: "android.hardware.vibrator-service.legacy.ple",
+    stem: "android.hardware.vibrator-service.legacy",
+    overrides: ["android.hardware.vibrator-service.legacy"],
+    relative_install_path: "hw",
+    init_rc: ["android.hardware.vibrator-service.legacy.rc"],
+    vintf_fragments: ["android.hardware.vibrator-service.legacy.xml"],
+    srcs: [
+        "Vibrator.cpp",
+        "service.cpp",
+    ],
+    shared_libs: [
+        "libbase",
+        "libbinder_ndk",
+        "libhardware",
+        "liblog",
+        "android.hardware.vibrator-V2-ndk",
+    ],
+    vendor: true,
+}

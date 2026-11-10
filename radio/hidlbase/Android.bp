@@ -1,0 +1,18 @@
+// Copyright (C) 2022-2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+// Source: LineageOS/android_hardware_lineage_compat,
+// 4d124113ee007e7508cbd10515bea5eb0cd433ab, with PLE constructor-map fixes.
+cc_library_shared {
+    name: "libhidlbase_shim.ple",
+    stem: "libhidlbase_shim",
+    overrides: ["libhidlbase_shim"],
+    srcs: [
+        "gBnsConstructorMap.cpp",
+        "Parcel.cpp",
+    ],
+    // Keep the original SONAME and Bionic relocation visibility for stock HALs.
+    ldflags: ["-Wl,-z,global"],
+    shared_libs: ["libhidlbase"],
+    compile_multilib: "both",
+    vendor: true,
+}

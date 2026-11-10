@@ -24,7 +24,7 @@ cc_binary {
     vintf_fragments: ["radio/PLE-radio.xml"],
     include_dirs: ["hardware/ril/rild"],
     header_libs: ["ril_headers"],
-    shared_libs: ["libhidlbase_shim", "libcutils", "libdl", "liblog", "libril"],
+    shared_libs: ["libhidlbase_shim.ple", "libcutils", "libdl", "liblog", "libril"],
     whole_static_libs: ["librilutils"],
     cflags: ["-DRIL_SHLIB", "-DPRODUCT_COMPATIBLE_PROPERTY", "-Wall", "-Wextra", "-Werror"],
 }

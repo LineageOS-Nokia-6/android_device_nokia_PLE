@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// Source: LineageOS/android_hardware_interfaces,
+// 13d687a84c834af855bfb314b853b8372a7aa6d9, with the PLE/Goodix active-group fix.
 // Exact619F uses the legacy2.1 non-CFI hardware-module ABI. Only this adapter
 // excludes cross-DSO CFI, as the existing PLE keymaster adapter already does.
 cc_binary {
@@ -7,7 +9,10 @@ cc_binary {
     vendor: true,
     compile_multilib: "64",
     relative_install_path: "hw",
-    srcs: [":legacy_fingerprint_2_1_sources"],
+    srcs: [
+        "fingerprint/BiometricsFingerprint.cpp",
+        "fingerprint/service.cpp",
+    ],
     init_rc: ["android.hardware.biometrics.fingerprint@2.1-service.ple.rc"],
     vintf_fragments: ["android.hardware.biometrics.fingerprint@2.1-service.ple.xml"],
     shared_libs: [

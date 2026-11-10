@@ -1,0 +1,23 @@
+// Copyright (C) 2016 The Android Open Source Project
+// Copyright (C) 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+// Source: LineageOS/android_hardware_interfaces,
+// 13d687a84c834af855bfb314b853b8372a7aa6d9, with real-list startup validation.
+cc_binary {
+    name: "android.hardware.sensors@1.0-service.ple",
+    stem: "android.hardware.sensors@1.0-service",
+    overrides: ["android.hardware.sensors@1.0-service"],
+    relative_install_path: "hw",
+    vendor: true,
+    init_rc: ["android.hardware.sensors@1.0-service.rc"],
+    srcs: ["service.cpp"],
+    shared_libs: [
+        "liblog",
+        "libcutils",
+        "libdl",
+        "libbase",
+        "libutils",
+        "libhidlbase",
+        "android.hardware.sensors@1.0",
+    ],
+}

@@ -135,7 +135,7 @@ PRODUCT_PACKAGES += \
     android.hardware.radio.deprecated@1.0.vendor \
     android.hardware.secure_element@1.0.vendor \
     libhwbinder.vendor \
-    libhidlbase_shim \
+    libhidlbase_shim.ple \
     libsqlite.vendor \
     libnetutils.vendor \
     libprotobuf-cpp-full-vendorcompat \
@@ -196,10 +196,10 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
     frameworks/av/services/audiopolicy/config/bluetooth_audio_policy_configuration_7_0.xml:$(TARGET_COPY_OUT_VENDOR)/etc/bluetooth_audio_policy_configuration_7_0.xml
 
-# Real PMI8950 LED motor, with honest legacy capabilities (patch0011).
+# Real PMI8950 LED motor, with the device-local legacy AIDL adapter.
 # The source module supports this kernel's activate/duration/state ABI.
 PRODUCT_PACKAGES += \
-    android.hardware.vibrator-service.legacy \
+    android.hardware.vibrator-service.legacy.ple \
     vibrator.default:64
 
 # Primary Mi8937 architecture: current source HIDL adapter and exact Nokia
@@ -207,7 +207,7 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     ple-sensors-bootstrap \
     android.hardware.sensors@1.0-impl:64 \
-    android.hardware.sensors@1.0-service \
+    android.hardware.sensors@1.0-service.ple \
     libpower.vendor:64 \
     PLEAutomaticBrightness
 PRODUCT_COPY_FILES += \

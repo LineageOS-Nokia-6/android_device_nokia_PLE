@@ -1,61 +1,105 @@
-# LineageOS 23.2 platform integration
+# LineageOS 23.2 integration for Nokia 6 (PLE)
 
-Place the three trees at `device/nokia/PLE`, `vendor/nokia/PLE` and
-`kernel/nokia/msm8937` in the Android source root. No Nokia common tree is used.
+The Nokia implementation uses exactly three trees: `device/nokia/PLE`,
+`vendor/nokia/PLE` and `kernel/nokia/msm8937`. No Nokia common or separate patch
+repository is required. Platform projects must match the pinned source trees
+listed in `series.tsv`; a newer upstream checkout requires a reviewed pin/patch
+update, not forced application.
 
-Apply the patches below to their indicated platform repositories in numerical
-order before a normal build. The source payloads are unchanged from the working
-integration. Preserve upstream licenses and use the pinned revisions below.
+## Apply the remaining platform changes
 
-| Patches | Repository | Base revision |
+From the Android source root:
+
+```sh
+./device/nokia/PLE/patches/apply.sh --source . --check
+./device/nokia/PLE/patches/apply.sh --source .
+```
+
+The first command is optional: normal application performs the same preflight
+for every project before the first write. The script requires Git and Python 3.9+.
+It works from another directory when `--source` names the Android checkout.
+
+The series contains **19 patches across 11 platform repositories**. The manifest
+records the exact base commit, SHA256 and path-strip level of every patch;
+0024 uses `-p3`, all others use `-p1`.
+
+Preflight uses temporary Git indexes/object stores, not a platform checkout or
+the source project's real index. It recognizes the original source tree, an
+exact applied prefix, or the complete applied series. A second invocation is a
+no-op; an interrupted series can resume only from an exact known prefix.
+Unrelated tracked/untracked edits, staged changes, unfinished Git operations,
+missing source files/repositories, changed patches and unsupported source trees
+are rejected. Ignored build outputs are left alone.
+
+Application changes working files only. It does **not** create commits, signoffs,
+reset/clean repositories, fetch/sync sources, change branches, build images or
+access a phone. Commit applied platform changes yourself if desired. On an I/O
+failure or concurrent edit the script stops without destructive rollback;
+inspect the error before resuming. It is not a cross-project atomic transaction.
+Nothing is silently applied during envsetup, lunch or compilation.
+
+## Fixes integrated directly into the device tree
+
+| Former patches | Implementation now compiled from this device tree |
+| --- | --- |
+| 0011 | `../vibrator/`: honest legacy capabilities, timeout and error handling |
+| 0013 | `../sensors/hal/`: publish only a nonempty real sensor list |
+| 0015 | `../goodix/fingerprint/`: PLE/Goodix active-group compatibility |
+| 0016, 0017 | `../radio/hidlbase/`: shared constructor maps and global ELF visibility |
+
+These small source adapters retain their upstream licenses and the accepted
+implementation bytes. Their unique Soong names end in `.ple`; `stem` retains
+the installed executable/library names and existing RC/VINTF paths. In
+particular, stock consumers still load `libhidlbase_shim.so`, not a renamed ABI.
+The fingerprint adapter keeps its existing PLE module name and scoped CFI
+exception. Product selection and the rild link dependency select local variants.
+Keyboard35ms/system45ms haptics and all existing policy are unchanged.
+
+## Why the other patches remain external
+
+A device overlay supplies resources and configuration, not replacement C++,
+Java or Kotlin method bodies in another repository. Copying a helper into a
+device tree does not change its platform call sites. Soong source groups must
+be exported from the package that owns the sources; `../` path escapes are not
+a supported replacement. These patches avoid copying entire maintained stacks.
+
+| Patch | Platform owner | Reason it stays |
 | --- | --- | --- |
-| 0001, 0007 | hardware/qcom-caf/msm8998/display | dcede86f9cd0215da892a7cc37eb28f738c0868d |
-| 0002 | packages/apps/Launcher3 | f83fbe24ed3c0bd3c4d7cd3186ffadefeda5b7db |
-| 0003, 0010, 0011, 0019, 0023 | hardware/lineage/interfaces | 805d25348106e8cc6f378c0b153789f3cf8da667 |
-| 0004, 0006 | hardware/qcom-caf/sdm660/media | 2098857ca9e357840703605c1520c9a9b4c21ff2 |
-| 0005 | hardware/qcom-caf/msm8998/media | 125f0e38ef5c289421d39f9710e24a3c9c04fbf2 |
-| 0008 | packages/apps/Glimpse | 8de08089dcd87a753c2c23e5861563238f681e99 |
-| 0009, 0024 | frameworks/base | 958afcc3d647d57571650cee4172afe0da619171 |
-| 0012 | system/sepolicy | 885cc500f6078a766d1f6def5ce4c06c55841773 |
-| 0013, 0015 | hardware/interfaces | 13d687a84c834af855bfb314b853b8372a7aa6d9 |
-| 0014 | packages/apps/AudioFX | cd989d5081978b062230da28ca20c353b0afd8c3 |
-| 0016, 0017 | hardware/lineage/compat | 4d124113ee007e7508cbd10515bea5eb0cd433ab |
-| 0018, 0020 | hardware/ril | cec58d16c72a4fb5a075c1671e2a494920797e24 |
-| 0021, 0022 | frameworks/opt/telephony | a6e94555e0d750e4557f5371811b776637ab7c50 |
+| 0001 | msm8998/display | Private Soong defaults must select modern ION ABI/dependencies |
+| 0002 | Launcher3 | Taskbar code must consume the existing no-scrim resource |
+| 0003 | lineage/interfaces camera | JPEG footer/fence conversion lives in CameraDeviceSession |
+| 0004 | sdm660/media | Export source groups used by device-local codec modules |
+| 0005 | msm8998/media | Suppress competing installers; library overrides alone do not cover dependency installs |
+| 0006 | sdm660/media | Correct a compiler-rejected conditional without disabling diagnostics |
+| 0007 | msm8998/display | Correct private gralloc CPU usage-mask interpretation |
+| 0008 | Glimpse | Release/reacquire the Activity decoder at lifecycle boundaries |
+| 0009 | frameworks/base | Battery glyph drawing is SystemUI Kotlin code, not an overlay resource |
+| 0010 | lineage/interfaces power | Cancellation belongs to the maintained libperfmgr implementation |
+| 0012 | system/sepolicy | Keep the actual host policy checker's full-width permission mask |
+| 0014 | AudioFX | Service/backend lifecycle and null-key checks are application code |
+| 0018 | hardware/ril | Normalize stock card records at the real libril callback |
+| 0019 | lineage/interfaces radio | Preserve physical slot identity through the radio wrapper |
+| 0020 | hardware/ril | Normalize the stock signal ABI before standard conversion |
+| 0021 | frameworks/opt/telephony | Preserve SIM-record fallback when optional HAL ICCID is empty |
+| 0022 | frameworks/opt/telephony | Handle asynchronous null profile IDs in the subscription service |
+| 0023 | lineage/interfaces radio | Convert empty legacy data-call fields into zero HIDL tokens |
+| 0024 | frameworks/base | Edge surfaces require changes to WindowManager transition call sites |
 
-From the Android root, check and apply each patch with:
+The five local fixes were removed from this queue; do not apply old copies as
+additional generic platform modifications. Numbering is retained for traceable
+source comparison; gaps in the series are intentional.
 
-```sh
-git -C <repository> apply --check "$PWD/device/nokia/PLE/patches/<patch>"
-git -C <repository> apply "$PWD/device/nokia/PLE/patches/<patch>"
-```
+## Build inputs
 
-On an already-patched checkout, `git apply --reverse --check` recognizes the
-installed state; do not apply a patch twice. Patches 0020 and 0022 depend on
-0018 and 0021 respectively. Build the normal complete affected modules, not
-isolated framework JARs or cached APK fragments.
-
-Exception: patch 0024 retains Android-root path prefixes. Inside frameworks/base,
-strip those two additional components with `-p3` for both the check and apply:
-
-```sh
-git -C frameworks/base apply -p3 --check "$PWD/device/nokia/PLE/patches/0024-ple-legacy-activity-edge-extension.patch"
-git -C frameworks/base apply -p3 "$PWD/device/nokia/PLE/patches/0024-ple-legacy-activity-edge-extension.patch"
-```
-
-Use `-p3` for its reverse check as well. All other patches use the default `-p1`.
-
-Display patch 0007 follows Mi-Thorium's split-usage cache-policy contract at
-cfc3ae9f0c94e2ce73b9e9361d8a91e680bfbbaf. Activity-edge patch 0024 follows
-the Android 15 helper at 8a4e6793439e6e63b041be6505fd16f8b9a03879,
-adapted to Android 16 capture APIs. Neither changes the Nokia stock buffer ABI.
-
-Populate the private vendor inputs before building; their extraction helpers
-and pinned manifests are in `vendor/nokia/PLE/tools` and `config/manifests`.
-The current source selection has two unresolved Wi-Fi inputs:
+The source kernel remains Linux4.19.325. Hardware data comes from exact Nokia
+Android9 `00WW_6_19F`, not Xiaomi board data. Populate the private vendor payload
+using its pinned manifests/extraction helpers before building `lineage_PLE`.
+Two previously missing stock source inputs are still required:
 `vendor/etc/wifi/WCNSS_qcom_cfg.ini` and
-`vendor/firmware/wlan/prima/WCNSS_cfg.dat`. Supply the exact stock inputs;
-do not substitute another device's firmware or configuration.
+`vendor/firmware/wlan/prima/WCNSS_cfg.dat`. Do not substitute another device's
+firmware/configuration. This integration does not itself claim a full clean
+build or a new device runtime qualification.
 
-Use the LineageOS product `lineage_PLE` with the branch's normal lunch/build
-workflow. The kernel is source-built using the fragments in BoardConfig.mk.
+Patch0007 follows Mi-Thorium cache-policy reference
+`cfc3ae9f0c94e2ce73b9e9361d8a91e680bfbbaf`; 0024 follows Android15 helper
+`8a4e6793439e6e63b041be6505fd16f8b9a03879`, adapted to Android16 capture APIs.
