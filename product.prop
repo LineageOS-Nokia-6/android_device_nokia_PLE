@@ -1,0 +1,11 @@
+# BPF compatibility for the backported LineageOS msm8937 4.19 kernel.
+# Source: LineageOS/android_device_xiaomi_mithorium-common lineage-23.2,
+# commits 4ec2df5c72649374bb41486a3296a2a83d8e5e00 and
+# 0a6b236646ea43bb7d660b81d05ea43938013c24. Consumed by KernelUtils.h;
+# the actual Linux release remains 4.19.325.
+ro.bpf.kver_override=5.10.239
+
+# Exact619F Adreno predates the reserved ARM64 x18 ABI and clobbers the
+# Zygote's SCS register during graphics preload. Keep modern SCS intact;
+# load graphics only in processes which use it, not the Bluetooth service.
+ro.zygote.disable_gl_preload=true

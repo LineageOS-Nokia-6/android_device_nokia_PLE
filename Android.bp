@@ -1,6 +1,65 @@
 // Copyright (C) 2026 The LineageOS Project
 // SPDX-License-Identifier: Apache-2.0
 
+cc_library_shared {
+    name: "libple_netmgr_bam",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["radio/netmgr_bam_prepare.c"],
+    stl: "none",
+    shared_libs: ["liblog", "libdl"],
+    system_shared_libs: ["libc"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}
+
+// Exact619F uses the legacy RIL entry contract. Reuse maintained AOSP C source,
+// with a scoped, linked ABI bridge first in DT_NEEDED; never bypass AT_SECURE.
+cc_binary {
+    name: "rild.ple",
+    overrides: ["rild"],
+    proprietary: true,
+    relative_install_path: "hw",
+    compile_multilib: "64",
+    srcs: ["radio/rild-main.c"],
+    vintf_fragments: ["radio/PLE-radio.xml"],
+    include_dirs: ["hardware/ril/rild"],
+    header_libs: ["ril_headers"],
+    shared_libs: ["libhidlbase_shim", "libcutils", "libdl", "liblog", "libril"],
+    whole_static_libs: ["librilutils"],
+    cflags: ["-DRIL_SHLIB", "-DPRODUCT_COMPATIBLE_PROPERTY", "-Wall", "-Wextra", "-Werror"],
+}
+
+prebuilt_etc {
+    name: "init.PLE.camera.rc",
+    src: "camera/init.PLE.camera.rc",
+    sub_dir: "init",
+    vendor: true,
+}
+
+cc_library_shared {
+    name: "libple_goodix_dumpdeny",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["goodix/dump_permission.cpp"],
+    stl: "none",
+    // Bionic's shared-library CRT needs __cxa_finalize even without STL.
+    system_shared_libs: ["libc"],
+}
+
+prebuilt_etc {
+    name: "init.PLE.audio.rc",
+    src: "audio/init.PLE.audio.rc",
+    sub_dir: "init",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "init.PLE.goodix.rc",
+    src: "goodix/init.PLE.goodix.rc",
+    sub_dir: "init",
+    vendor: true,
+}
+
 prebuilt_etc {
     name: "fstab.qcom",
     src: "rootdir/etc/fstab.qcom",
@@ -10,8 +69,22 @@ prebuilt_etc {
 
 prebuilt_etc {
     name: "init.PLE.rc",
+    filename: "init.qcom.rc",
     src: "rootdir/etc/init.PLE.rc",
     sub_dir: "init/hw",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "init.qseecomd.rc",
+    src: "rootdir/etc/init.qseecomd.rc",
+    sub_dir: "init",
+    vendor: true,
+}
+
+sh_binary {
+    name: "init.qti.qseecomd.sh",
+    src: "rootdir/bin/init.qti.qseecomd.sh",
     vendor: true,
 }
 
@@ -23,8 +96,52 @@ prebuilt_etc {
 }
 
 prebuilt_etc {
+    name: "zz-ple-keymaster.rc",
+    src: "rootdir/etc/zz-ple-keymaster.rc",
+    sub_dir: "init",
+    vendor: true,
+}
+
+prebuilt_etc {
     name: "init.recovery.qcom.rc",
     src: "recovery/root/init.recovery.qcom.rc",
     sub_dir: "init",
     recovery: true,
+}
+
+prebuilt_etc {
+    name: "ple-usbdiag.sh",
+    src: "recovery/root/ple-usbdiag.sh",
+    recovery: true,
+}
+
+// Nokia's Android 9 keymaster module is a legacy, non-CFI DSO whose
+// hw_module_methods_t function pointers are called by this passthrough
+// adapter.  Keep the exception PLE-local: cross-DSO CFI rejects the stock
+// methods->open() target before the HIDL service can register.
+cc_library_shared {
+    name: "android.hardware.keymaster@3.0-impl.ple",
+    // PassthroughServiceManager scans @3.0-impl*.so; keep a distinct
+    // install/symbols name so the AOSP and PLE module graphs do not collide.
+    stem: "android.hardware.keymaster@3.0-impl-ple",
+    overrides: ["android.hardware.keymaster@3.0-impl"],
+    proprietary: true,
+    relative_install_path: "hw",
+    compile_multilib: "64",
+    srcs: ["keymaster/KeymasterDevice.cpp"],
+    shared_libs: [
+        "android.hardware.keymaster@3.0",
+        "libcrypto",
+        "libhardware",
+        "libhidlbase",
+        "libkeymaster_portable",
+        "libkeymaster3device",
+        "liblog",
+        "libpuresoftkeymasterdevice",
+        "libsoftkeymasterdevice",
+        "libutils",
+    ],
+    sanitize: {
+        cfi: false,
+    },
 }

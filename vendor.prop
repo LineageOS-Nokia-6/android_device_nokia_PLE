@@ -1,0 +1,43 @@
+# Exact Nokia 6 619F GPU userspace, paired with the official LineageOS
+# Mi8937/Mi-Thorium-style source-built Qualcomm display stack.
+ro.hardware.egl=adreno
+ro.opengles.version=196610
+ro.hardware.fingerprint=goodix
+ro.hardware.audio.primary=ple
+ro.vendor.ple=PLE
+
+# Current Bluetooth profile consumers default these selectors to false.
+# Official mithorium ee31e7ba... architecture; no LE Audio or DSP offload.
+bluetooth.profile.gatt.enabled=true
+bluetooth.profile.a2dp.source.enabled=true
+bluetooth.profile.avrcp.target.enabled=true
+bluetooth.profile.hfp.ag.enabled=true
+
+persist.vendor.amp.en=1
+persist.vendor.amp.call=true
+
+# The modern provider consumes the stock module's camera3 interface.
+persist.vendor.camera.HAL3.enabled=1
+# Exact619F camera default; do not inherit an unrelated ISP clock policy.
+persist.vendor.camera.isp.clock.optmz=0
+
+# PLE619F Venus rejects the modern decoder's UBWC DPB split (HFI 0x1007).
+# Keep both reference/output buffers linear; no firmware/clock substitution.
+vendor.vidc.disable.split.mode=1
+
+# Conservative first-boot settings from the maintained Mi8937 path.
+debug.sf.enable_hwc_vds=1
+debug.sf.hw=0
+debug.egl.hw=0
+debug.sf.latch_unsignaled=1
+vendor.display.disable_skip_validate=1
+
+# Explicit phone heap: final Nokia PLE Android 9 619F settings. Without
+# these AndroidRuntime falls back to -Xmx16m and system_server runs out of
+# memory. The maintained Mi8937 profile uses the same 192m/512m limits.
+dalvik.vm.heapstartsize=16m
+dalvik.vm.heapgrowthlimit=192m
+dalvik.vm.heapsize=512m
+dalvik.vm.heapminfree=4m
+dalvik.vm.heapmaxfree=8m
+dalvik.vm.heaptargetutilization=0.75
