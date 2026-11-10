@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# System-side init creates only the legacy TA storage root. Never reset,
+# enumerate, relabel recursively or delete pre-existing biometric data.
+on post-fs-data
+    mkdir /data/system/fingerprint 0700 system system
+    restorecon /data/system/fingerprint

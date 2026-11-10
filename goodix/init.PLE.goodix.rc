@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: Apache-2.0
+# Normal exact-stock Goodix startup, possible sensor MCU update authorized.
+# No direct protected-partition or biometric template operations here.
+on property:ro.boot.gxfp_lv=true
+    setprop vendor.fplv 1
+
+# Stock enables the capacitive navigation panel on init.  Set the migrated
+# property only after /data persistent properties have been loaded so an old
+# or missing saved value cannot restore fingerprint-only mode.
+on load_persist_props_action
+    setprop persist.vendor.fpnav 1
+
+service gx_fpd /vendor/bin/gx_fpd
+    class main
+    user system
+    group system drmrpc
+
+# Preserve the stock client's recovery request, with its mapped vendor name.
+on property:vendor.fpready=false
+    restart gx_fpd
+    setprop vendor.fpready true
+
+# gx_fpd opens the stock gxfingerprint module and publishes key events through
+# /dev/goodix_fp. The separate source-built PLE HIDL adapter connects through
+# its existing vendor Binder service without replacing navigation initialization.

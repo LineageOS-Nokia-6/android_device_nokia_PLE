@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+# Exact customer1 Linux codes from HMD619F goodix_gfx18m; Android key meanings.
+# Capacitive hardware keys: let Android's real virtual-key policy request
+# feedback. These are not software navigation buttons or an on-screen bar.
+key 172 HOME VIRTUAL
+key 158 BACK VIRTUAL
+key 580 APP_SWITCH VIRTUAL
+key 139 MENU
+key 143 WAKEUP
+key 103 DPAD_UP
+key 108 DPAD_DOWN
