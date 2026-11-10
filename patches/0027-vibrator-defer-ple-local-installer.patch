@@ -1,0 +1,14 @@
+diff --git a/vibrator/aidl-legacy/Android.bp b/vibrator/aidl-legacy/Android.bp
+--- a/vibrator/aidl-legacy/Android.bp
++++ b/vibrator/aidl-legacy/Android.bp
+@@ -6,6 +6,10 @@
+ 
+ cc_binary {
+     name: "android.hardware.vibrator-service.legacy",
++    enabled: select(soong_config_variable("nokia_ple", "device_local_hal"), {
++        true: false,
++        default: true,
++    }),
+     relative_install_path: "hw",
+     init_rc: ["android.hardware.vibrator-service.legacy.rc"],
+     vintf_fragments: ["android.hardware.vibrator-service.legacy.xml"],

@@ -1,0 +1,14 @@
+diff --git a/sensors/1.0/default/Android.bp b/sensors/1.0/default/Android.bp
+--- a/sensors/1.0/default/Android.bp
++++ b/sensors/1.0/default/Android.bp
+@@ -62,6 +62,10 @@
+ 
+ cc_binary {
+     name: "android.hardware.sensors@1.0-service",
++    enabled: select(soong_config_variable("nokia_ple", "device_local_hal"), {
++        true: false,
++        default: true,
++    }),
+     relative_install_path: "hw",
+     vendor: true,
+     init_rc: ["android.hardware.sensors@1.0-service.rc"],

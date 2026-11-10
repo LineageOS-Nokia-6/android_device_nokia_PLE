@@ -7,8 +7,8 @@ cc_library_shared {
     compile_multilib: "64",
     srcs: ["radio/netmgr_bam_prepare.c"],
     stl: "none",
-    shared_libs: ["liblog", "libdl"],
-    system_shared_libs: ["libc"],
+    shared_libs: ["liblog"],
+    system_shared_libs: ["libc", "libdl"],
     cflags: ["-Wall", "-Wextra", "-Werror"],
 }
 

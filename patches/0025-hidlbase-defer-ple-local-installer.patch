@@ -1,0 +1,14 @@
+diff --git a/Android.bp b/Android.bp
+--- a/Android.bp
++++ b/Android.bp
+@@ -341,6 +341,10 @@
+ 
+ cc_library {
+     name: "libhidlbase_shim",
++    enabled: select(soong_config_variable("nokia_ple", "device_local_hal"), {
++        true: false,
++        default: true,
++    }),
+     srcs: [
+         "libhidlbase/gBnsConstructorMap.cpp",
+         "libhidlbase/Parcel.cpp",

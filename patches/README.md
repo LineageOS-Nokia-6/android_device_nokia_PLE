@@ -20,7 +20,7 @@ The first command is optional: normal application performs the same preflight
 for every project before the first write. The script requires Git and Python 3.9+.
 It works from another directory when `--source` names the Android checkout.
 
-The series contains **19 patches across 11 platform repositories**. The manifest
+The series contains **22 patches across 13 platform repositories**. The manifest
 records the tested base commit as provenance, SHA256 and strip level of every patch;
 0024 uses `-p3`, all others use `-p1`.
 
@@ -64,6 +64,13 @@ The fingerprint adapter keeps its existing PLE module name and scoped CFI
 exception. Product selection and the rild link dependency select local variants.
 Keyboard35ms/system45ms haptics and all existing policy are unchanged.
 
+Patches0025–0027 disable only the three superseded generic modules when
+`nokia_ple.device_local_hal=true`, as selected by BoardConfig.mk. This is needed
+before Soong emits Make install rules: `overrides` alone does not prevent two
+globally visible modules with the same stem from creating conflicting rules.
+The implementations remain entirely local. Other products retain the generic
+modules by default; installed PLE paths, SONAMEs, init and policy stay unchanged.
+
 ## Why the other patches remain external
 
 A device overlay supplies resources and configuration, not replacement C++,
@@ -93,6 +100,9 @@ a supported replacement. These patches avoid copying entire maintained stacks.
 | 0022 | frameworks/opt/telephony | Handle asynchronous null profile IDs in the subscription service |
 | 0023 | lineage/interfaces radio | Convert empty legacy data-call fields into zero HIDL tokens |
 | 0024 | frameworks/base | Edge surfaces require changes to WindowManager transition call sites |
+| 0025 | lineage/compat | Disable competing generic HIDL shim installer for the PLE-local implementation |
+| 0026 | hardware/interfaces | Disable competing generic sensor service installer for PLE |
+| 0027 | lineage/interfaces | Disable competing generic vibrator installer for PLE |
 
 The five local fixes were removed from this queue; do not apply old copies as
 additional generic platform modifications. Numbering is retained for traceable

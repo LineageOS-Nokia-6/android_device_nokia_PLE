@@ -112,6 +112,10 @@ TARGET_USERIMAGES_USE_EXT4 := true
 # Platform and recovery.
 TARGET_BOARD_PLATFORM := msm8937
 BOARD_USES_QCOM_HARDWARE := true
+# Exact619F supplies the tested data stack, including librmnetctl.so. Do not
+# export competing generic dataservices installers into this product's Make.
+USE_DEVICE_SPECIFIC_DATASERVICES := true
+DEVICE_SPECIFIC_DATASERVICES_PATH := vendor/nokia/PLE
 # Exact Android 9 619F declares this platform SPL; its vendor SPL was blank.
 # Record the legacy vendor-base date, not new backports or an audited CVE claim.
 VENDOR_SECURITY_PATCH := 2020-10-01
@@ -125,6 +129,9 @@ QCOM_SOONG_NAMESPACE := hardware/qcom-caf/msm8998
 # Keep that exact display ABI, but do not install its old3.18 codec libraries
 # over the device-selected modern4.19 media modules with the same SONAMEs.
 $(call soong_config_set_bool,nokia_ple,modern_media,true)
+# Local implementations retain the stock-facing stems/SONAMEs. Disable only
+# their generic counterparts before Soong emits conflicting Make install rules.
+$(call soong_config_set_bool,nokia_ple,device_local_hal,true)
 BOARD_SHIPPING_API_LEVEL := 25
 PRODUCT_FULL_TREBLE_OVERRIDE := true
 BOARD_VNDK_VERSION := current
