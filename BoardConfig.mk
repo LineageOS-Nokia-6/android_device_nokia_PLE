@@ -98,6 +98,14 @@ TARGET_COPY_OUT_ODM := odm
 BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
+# Reserve room for recovery-installed add-ons in the dynamic ext4 images.
+# Let mke2fs size the inode tables instead of trimming them to the ROM files.
+BOARD_SYSTEMIMAGE_PARTITION_RESERVED_SIZE := 33554432
+BOARD_SYSTEMIMAGE_EXTFS_INODE_COUNT := -1
+BOARD_PRODUCTIMAGE_PARTITION_RESERVED_SIZE := 402653184
+BOARD_PRODUCTIMAGE_EXTFS_INODE_COUNT := -1
+BOARD_SYSTEM_EXTIMAGE_PARTITION_RESERVED_SIZE := 67108864
+BOARD_SYSTEM_EXTIMAGE_EXTFS_INODE_COUNT := -1
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
 # Fixed ext4 capacities prevent dynamic image auto-sizing from producing a
 # completely full ODM and a vendor image with only448KiB spare. These sizes
