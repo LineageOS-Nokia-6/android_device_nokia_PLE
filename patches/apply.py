@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 The LineageOS Project
 # SPDX-License-Identifier: Apache-2.0
-"""Preflight the complete pinned PLE series before changing platform sources."""
+"""Preflight the complete PLE series against compatible current platform sources."""
 import argparse
 import hashlib
 import os
@@ -101,7 +101,37 @@ def snapshot(project, scratch):
     git(project, 'add', '-A', '--', '.', git_dir=scratch / '.git', work_tree=project)
     return head, value(scratch, 'write-tree')
 
-def preflight(source, kit, groups, temporary):
+def prefix_trees(scratch, patches):
+    trees = [value(scratch, 'write-tree')]
+    for patch, strip in patches:
+        git(scratch, 'apply', '--cached', '--check', '--whitespace=error', '-p' + strip, str(patch))
+        git(scratch, 'apply', '--cached', '--whitespace=error', '-p' + strip, str(patch))
+        trees.append(value(scratch, 'write-tree'))
+    return trees
+
+def compatible_prefixes(scratch, head, patches, name):
+    """Reconstruct a possible pristine tree from an exact committed prefix.
+
+    Unrelated committed upstream changes remain in that tree. Working-file
+    changes must still equal one exact prefix of this complete ordered series.
+    All reconstruction happens in the private Git index, never the source.
+    """
+    head_tree = value(scratch, 'rev-parse', head + '^{tree}')
+    last_error = ''
+    for committed in range(len(patches), -1, -1):
+        git(scratch, 'read-tree', head)
+        try:
+            for patch, strip in reversed(patches[:committed]):
+                git(scratch, 'apply', '--cached', '--reverse', '--whitespace=error',
+                    '-p' + strip, str(patch))
+            trees = prefix_trees(scratch, patches)
+            if trees[committed] == head_tree:
+                return trees
+        except PatchError as error:
+            last_error = str(error)
+    raise PatchError('incompatible source or non-prefix committed patches: ' + name + '\n' + last_error)
+
+def preflight(source, kit, groups, temporary, strict_base=False):
     states = []
     locked_patches = temporary / 'patches'
     locked_patches.mkdir()
@@ -113,9 +143,6 @@ def preflight(source, kit, groups, temporary):
         scratch = temporary / str(number)
         git(source, 'clone', '--quiet', '--shared', '--no-checkout', '--no-hardlinks',
             str(project), str(scratch))
-        git(scratch, 'cat-file', '-e', group['base'] + '^{commit}')
-        git(scratch, 'read-tree', group['base'])
-        prefixes = [value(scratch, 'write-tree')]
         locked = []
         for patch, strip in group['patches']:
             data = patch.read_bytes()
@@ -125,10 +152,13 @@ def preflight(source, kit, groups, temporary):
             frozen.write_bytes(data)
             frozen.chmod(0o444)
             locked.append((frozen, strip))
-            git(scratch, 'apply', '--cached', '--check', '--whitespace=error', '-p' + strip, str(frozen))
-            git(scratch, 'apply', '--cached', '--whitespace=error', '-p' + strip, str(frozen))
-            prefixes.append(value(scratch, 'write-tree'))
         head, current = snapshot(project, scratch)
+        if strict_base:
+            git(scratch, 'cat-file', '-e', group['base'] + '^{commit}')
+            git(scratch, 'read-tree', group['base'])
+            prefixes = prefix_trees(scratch, locked)
+        else:
+            prefixes = compatible_prefixes(scratch, head, locked, name)
         if current not in prefixes:
             raise PatchError('unrelated work or unsupported source revision: ' + name)
         prefix = prefixes.index(current)
@@ -154,6 +184,8 @@ def main():
     parser = argparse.ArgumentParser(prog='apply.sh', description=__doc__)
     parser.add_argument('--source', type=Path, default=Path.cwd(), help='LineageOS Android source root')
     parser.add_argument('--check', action='store_true', help='validate without modifying platform sources')
+    parser.add_argument('--strict-base', action='store_true',
+                        help='require the recorded baseline trees instead of compatible current sources')
     args = parser.parse_args()
     source, kit = args.source.resolve(), Path(__file__).resolve().parent
     if not (source / '.repo').is_dir() or not (source / 'build/envsetup.sh').is_file():
@@ -162,7 +194,7 @@ def main():
     manifest_digest = hashlib.sha256(manifest).hexdigest()
     groups = load_series(kit, manifest)
     with tempfile.TemporaryDirectory(prefix='ple-platform-preflight-') as directory:
-        states = preflight(source, kit, groups, Path(directory))
+        states = preflight(source, kit, groups, Path(directory), args.strict_base)
         # Revalidate every project before the first write, then again per patch.
         inputs_unchanged(kit, manifest_digest, groups)
         for state in states:

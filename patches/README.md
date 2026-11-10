@@ -2,9 +2,10 @@
 
 The Nokia implementation uses exactly three trees: `device/nokia/PLE`,
 `vendor/nokia/PLE` and `kernel/nokia/msm8937`. No Nokia common or separate patch
-repository is required. Platform projects must match the pinned source trees
-listed in `series.tsv`; a newer upstream checkout requires a reviewed pin/patch
-update, not forced application.
+repository is required. Platform projects are checked against their current
+source contents; compatible upstream commits do not need to match the recorded
+base revisions. This series targets LineageOS 23.2 and its manifest-selected CAF
+branches/AOSP tags, not arbitrary future Android releases.
 
 ## Apply the remaining platform changes
 
@@ -20,16 +21,24 @@ for every project before the first write. The script requires Git and Python 3.9
 It works from another directory when `--source` names the Android checkout.
 
 The series contains **19 patches across 11 platform repositories**. The manifest
-records the exact base commit, SHA256 and path-strip level of every patch;
+records the tested base commit as provenance, SHA256 and strip level of every patch;
 0024 uses `-p3`, all others use `-p1`.
 
 Preflight uses temporary Git indexes/object stores, not a platform checkout or
-the source project's real index. It recognizes the original source tree, an
-exact applied prefix, or the complete applied series. A second invocation is a
-no-op; an interrupted series can resume only from an exact known prefix.
+the source project's real index. It derives a baseline from current HEAD,
+including unrelated committed upstream updates, and recognizes an exact applied
+prefix or the complete applied series, including committed prefixes. A second
+invocation is a no-op; an interrupted series resumes only from a known prefix.
 Unrelated tracked/untracked edits, staged changes, unfinished Git operations,
-missing source files/repositories, changed patches and unsupported source trees
+missing source files/repositories, changed patches and conflicting source trees
 are rejected. Ignored build outputs are left alone.
+
+For exact recorded-baseline reproduction, add `--strict-base` to either command.
+Only that optional mode requires the recorded base commit objects and tree
+contents. Neither mode fetches them. Patch 0020 requires the header added by
+0018; keep the declared order. Nokia stock ABI and product guards are retained
+even when newer platform commits are accepted. Passing preflight does not replace
+a full build and hardware regression tests.
 
 Application changes working files only. It does **not** create commits, signoffs,
 reset/clean repositories, fetch/sync sources, change branches, build images or
@@ -93,12 +102,11 @@ source comparison; gaps in the series are intentional.
 
 The source kernel remains Linux4.19.325. Hardware data comes from exact Nokia
 Android9 `00WW_6_19F`, not Xiaomi board data. Populate the private vendor payload
-using its pinned manifests/extraction helpers before building `lineage_PLE`.
-Two previously missing stock source inputs are still required:
-`vendor/etc/wifi/WCNSS_qcom_cfg.ini` and
-`vendor/firmware/wlan/prima/WCNSS_cfg.dat`. Do not substitute another device's
-firmware/configuration. This integration does not itself claim a full clean
-build or a new device runtime qualification.
+with `vendor/nokia/PLE/extract-files.sh` before building `lineage_PLE`; see that
+repository's `README` for inputs and commands. The complete extraction includes
+both hash-pinned PLE Wi-Fi files and checks all selected output digests/modes.
+Do not substitute another device's firmware/configuration. This integration
+does not itself claim a full clean build or a new device runtime qualification.
 
 Patch0007 follows Mi-Thorium cache-policy reference
 `cfc3ae9f0c94e2ce73b9e9361d8a91e680bfbbaf`; 0024 follows Android15 helper
